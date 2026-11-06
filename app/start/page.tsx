@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAccount } from "@/components/account/AccountProvider";
 import MakerHeader from "@/components/letter/MakerHeader";
 import BookPage from "@/components/letter/BookPage";
 import PhotoTools, { photoEditorProps } from "@/components/letter/PhotoTools";
@@ -16,18 +17,23 @@ import "../letter/maker.css";
 // 시작 = 표지 만들기. 책(8×8)을 바로 보여주고, 표지 위에서 사진·이름·기념일을 바로 넣는다.
 // 비회원은 기기에, 로그인한 회원은 계정에도 원고와 사진을 보관한다.
 export default function StartPage() {
+  const { user, loading } = useAccount();
   const draft = useDraft();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [photoMode, setPhotoMode] = useState<"image" | null>(null);
 
-  // 처음 들어오면 빈 편지 한 권을 만든다.
   useEffect(() => {
-    if (draft === null) createDraft();
-  }, [draft]);
+    if (!loading && !user) router.replace("/login?next=%2Fstart");
+  }, [loading, user, router]);
 
-  if (!draft) return null;
+  // 로그인한 뒤 처음 들어오면 빈 편지 한 권을 만든다.
+  useEffect(() => {
+    if (!loading && user && draft === null) createDraft();
+  }, [draft, loading, user]);
+
+  if (loading || !user || !draft) return null;
 
   if (draft.status === "submitted") {
     return (
@@ -191,3 +197,4 @@ function NewLetterButton() {
     </button>
   );
 }
+

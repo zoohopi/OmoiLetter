@@ -31,6 +31,7 @@ export default function LoginPage() {
     <button className="oauth-button oauth-button--google" disabled={!configured || !!busy || loading} onClick={() => void login("google")}><span aria-hidden>G</span>{busy === "google" ? "연결 중…" : "Google로 시작하기"}</button>
     {error && <p role="alert" className="account-error">{error}</p>}
     <p className="account-fine">처음 로그인하면 회원 계정이 만들어져요.<br />로그인 전 작성한 책은 보관함에서 직접 가져올 수 있어요.</p>
-    <Link href="/start" className="account-text-link">먼저 책 만들기 →</Link>
+    <Link href="/" className="account-text-link">홈으로 돌아가기</Link>
   </div></main>;
 }
+
