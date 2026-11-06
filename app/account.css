@@ -1,0 +1,71 @@
+.account-shell{min-height:100svh;padding:48px 20px 90px;color:#695974;font-family:var(--font-body),sans-serif;background:#fff6e7}
+.account-container{max-width:1000px;margin:auto}.account-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:56px}.account-brand{font-family:var(--font-serif),serif;font-size:24px;text-decoration:none;color:#695974}.account-shell h1{font-family:var(--font-title),serif;font-size:clamp(32px,6vw,48px);font-weight:400;line-height:1.3;margin:16px 0}.account-intro{margin-bottom:30px}.account-eyebrow{font-size:11px;letter-spacing:.14em;color:#4067a0}.account-tabs{display:flex;gap:8px;border-bottom:1px solid #69597426;margin-bottom:28px;overflow:auto}.account-tabs button{border:0;border-bottom:3px solid transparent;background:none;padding:14px 16px;white-space:nowrap;color:#695974;font:inherit;cursor:pointer}.account-tabs button.is-active{color:#4067a0;border-color:#4067a0;font-weight:600}.account-card{background:#fffdf9;border:1px solid #69597422;padding:28px;border-radius:12px;box-shadow:0 8px 28px #69597408;margin-bottom:20px}.account-card h2{font-size:20px;margin:0 0 12px}.account-card h3{font-size:24px;margin:12px 0}.account-card p{line-height:1.7;margin:8px 0 16px}.account-current{display:flex;align-items:center;justify-content:space-between;gap:20px}.account-actions{display:flex;flex-wrap:wrap;gap:10px}.account-button{display:inline-flex;justify-content:center;align-items:center;border:1px solid #695974;background:#695974;color:#fff6e7;border-radius:24px;padding:11px 20px;min-height:44px;font:inherit;font-size:14px;text-decoration:none;cursor:pointer}.account-button--outline{background:transparent;color:#695974}.account-text-link{border:0;background:none;color:#695974;font:inherit;text-decoration:underline;text-underline-offset:4px;cursor:pointer;padding:8px 0}.account-shell button:disabled{opacity:.5;cursor:wait}.account-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:22px 0}.account-section-heading h2{margin:0;font-size:21px}.account-book-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.account-book-grid .account-card{margin:0}.account-details-grid{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:24px}.account-form{display:grid;gap:16px}.account-form label{display:grid;gap:8px;font-size:14px}.account-form input,.account-form select{min-width:0;width:100%;box-sizing:border-box;border:1px solid #69597444;background:#fff;border-radius:6px;padding:12px;color:#493c54;font:inherit;font-size:16px}.account-form :is(input,select):focus{outline:2px solid #4067a0;outline-offset:2px}.account-form .account-button{justify-self:start}.account-fine{font-size:12px;line-height:1.6;opacity:.8;overflow-wrap:anywhere}.account-empty{padding:48px 0;text-align:center;line-height:1.8}.account-error{color:#973e46;background:#fff0ee;border:1px solid #ed817e88;padding:14px 18px;border-radius:8px;line-height:1.7}.account-notice{background:#4067a00b;border:1px solid #4067a033;padding:14px 18px;border-radius:8px;line-height:1.7}.account-address{padding:16px 0;border-top:1px solid #69597422}.account-address p{font-size:14px}.account-login{max-width:420px;margin:6vh auto;text-align:center;padding:36px}.account-login .account-brand{display:inline-block;margin-bottom:30px}.account-login h1{font-size:38px}.account-login>p{font-size:14px}.oauth-button{width:100%;display:flex;align-items:center;justify-content:center;gap:16px;min-height:52px;padding:12px;border-radius:8px;margin:12px 0;font:600 15px var(--font-body),sans-serif;border:1px solid #dedede;cursor:pointer}.oauth-button--kakao{background:#fee500;color:#191919;border-color:#fee500}.oauth-button--google{background:#fff;color:#303030}.oauth-button span{font:bold 20px Arial}.account-nav-link{font:14px var(--font-body),sans-serif;color:inherit;white-space:nowrap;text-decoration:none;margin-left:16px}.account-sync-state{font-size:11px;color:#4067a0;max-width:240px}.account-sync-state.is-error{color:#973e46}.mk-head__row .account-nav-link{margin-left:auto}.account-footer-link{margin:12px 0}
+@media(max-width:640px){.account-shell{padding:26px 16px 60px}.account-header{margin-bottom:36px}.account-card{padding:22px}.account-login{padding:28px 20px;margin-top:4vh}.account-current{display:block}.account-book-grid,.account-details-grid{grid-template-columns:1fr;gap:16px}.account-tabs button{padding:12px 10px;font-size:14px}.account-section-heading{flex-wrap:wrap}.account-sync-state{max-width:140px}.account-nav-link{font-size:12px}.account-actions{margin-top:12px}}
+
+/* Shared account button for reading and book-making headers. */
+.account-nav-link {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 10px 19px;
+  overflow: hidden;
+  border: 1px solid rgba(105, 89, 116, .22);
+  border-radius: 12px;
+  background: linear-gradient(145deg, #fffbf3, #f5ebdd);
+  color: #695974;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .035em;
+  line-height: 1.2;
+  box-shadow: inset 0 1px 0 #ffffffb3, 0 2px 6px #30243912;
+  transition: border-color .2s ease, box-shadow .2s ease, color .2s ease;
+}
+.account-nav-link__icon { flex: none; opacity: .85; }
+@media (hover: hover) {
+  .account-nav-link:hover {
+    color: #51405e;
+    border-color: #69597480;
+    box-shadow: inset 0 1px 0 #ffffffb3, 0 3px 10px #30243926;
+  }
+}
+.account-nav-link:active { box-shadow: inset 0 1px 3px #69597426; }
+.account-nav-link:focus-visible {
+  outline: 2px solid #4067a0;
+  outline-offset: 3px;
+}
+.topbar .account-nav-link:focus-visible { outline-color: #fff6e7; }
+@media (max-width: 640px) {
+  .account-nav-link { gap: 7px; padding: 10px 15px; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-nav-link { transition: none; }
+}
+
+.account-nav-link__envelope {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 20px;
+  height: 22px;
+  font-size: 17px;
+  line-height: 1;
+}
+.account-nav-link__heart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #ed817e;
+  font-size: 9px;
+  line-height: 1;
+  text-shadow: 0 1px 2px #fff6e7;
+}
+
+

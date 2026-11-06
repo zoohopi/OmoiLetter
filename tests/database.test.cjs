@@ -1,0 +1,56 @@
+// Runs the production migration on an isolated PostgreSQL engine; no live data.
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {PGlite}=require('@electric-sql/pglite');
+test('member isolation, revisions, immutable orders and private photos',async()=>{
+ const db=new PGlite();
+ try {
+ await db.exec(`create role anon; create role authenticated;
+ create schema auth;create schema storage;
+ create table auth.users(id uuid primary key,raw_user_meta_data jsonb default '{}');
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+ create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,unique(bucket_id,name));
+ alter table storage.objects enable row level security;
+ create function storage.foldername(text) returns text[] language sql immutable as $$select (string_to_array($1,'/'))[1:array_length(string_to_array($1,'/'),1)-1]$$;
+ grant usage on schema public,auth,storage to authenticated,anon;
+ grant all on storage.objects to authenticated;
+ `);
+ await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/202611040001_members_books_orders.sql'),'utf8'));
+ const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222',book='33333333-3333-4333-8333-333333333333';
+ await db.query(`insert into auth.users(id) values($1),($2)`,[a,b]);
+ const as=async(id)=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated')};
+ const fails=async(query,args,code)=>{await assert.rejects(db.query(query,args),e=>!code||e.code===code)};
+ await as(a);
+ const photoPath=`${a}/${book}/photo-hash`;
+ await db.query("insert into storage.objects(bucket_id,name) values('book-photos',$1)",[photoPath]);
+ const draft={version:1,status:'draft',recipientName:'회원 A',bookPhotos:Array.from({length:9},(_,i)=>({id:'page'+i,photoId:'photo1'})),coverPhotoId:'photo1',photoByQuestion:{},letters:[{id:'letter',question:'안부',answer:'편지 내용',pageId:'page0'}]};
+ const assets={photo1:{path:photoPath,mime:'image/jpeg',size:1234}};
+ const save=(rev,d=draft,id=book,images=assets)=>db.query('select public.save_my_book($1,$2,$3::jsonb,$4::jsonb) revision',[id,rev,JSON.stringify(d),JSON.stringify(images)]);
+ assert.equal((await save(0)).rows[0].revision,1);
+ assert.equal((await db.query('select * from public.profiles')).rows.length,1);
+ await fails('update public.books set title=$1',['hacked'],'42501');
+ await fails('select public.save_my_book($1,0,$2::jsonb,$3::jsonb)',[book,JSON.stringify({...draft,recipientName:'old'}),JSON.stringify(assets)],'40001');
+ await as(b);
+ for(const table of ['books','book_assets','orders','shipments'])assert.equal((await db.query(`select * from public.${table}`)).rows.length,0);
+ assert.equal((await db.query('select * from storage.objects')).rows.length,0);
+ await fails('select public.save_my_book($1,1,$2::jsonb,$3::jsonb)',[book,JSON.stringify(draft),JSON.stringify(assets)],'42501');
+ await fails("insert into storage.objects(bucket_id,name) values('book-photos',$1)",[photoPath+'/foreign'],'42501');
+ await fails("insert into public.addresses(user_id,label,recipient_name,phone,postal_code,address1) values($1,'집','이름','01012345678','12345','서울시 주소')",[a],'42501');
+ await as(a);
+ const address=(await db.query("insert into public.addresses(user_id,label,recipient_name,phone,postal_code,address1) values($1,'집','받는 분','01012345678','12345','서울시 원래 주소') returning id",[a])).rows[0].id;
+ await fails('select public.request_book_order($1,$2)',[book,address],'22023');
+ assert.equal((await save(1,{...draft,status:'submitted'})).rows[0].revision,2);
+ const order=(await db.query('select public.request_book_order($1,$2) id',[book,address])).rows[0].id;
+ assert.equal((await db.query('select public.request_book_order($1,$2) id',[book,address])).rows[0].id,order);
+ await db.query("update public.addresses set address1='변경한 주소' where id=$1",[address]);
+ assert.equal((await db.query('select shipping_address from public.orders')).rows[0].shipping_address.address1,'서울시 원래 주소');
+ await fails("update public.orders set status='paid' where id=$1",[order],'42501');
+ await fails('select public.save_my_book($1,2,$2::jsonb,$3::jsonb)',[book,JSON.stringify({...draft,status:'draft'}),JSON.stringify(assets)],'42501');
+ await as(b);assert.equal((await db.query('select * from public.orders')).rows.length,0);
+ await fails('select public.request_book_order($1,$2)',[book,address],'22023');
+ await db.exec('reset role');await db.query("insert into public.shipments(order_id,carrier,tracking_number) values($1,'CJ대한통운','1234')",[order]);
+ await as(b);assert.equal((await db.query('select * from public.shipments')).rows.length,0);
+ await as(a);assert.equal((await db.query('select * from public.shipments')).rows.length,1);
+ console.log('Verified: migration, private storage, A/B isolation, stale revisions, frozen snapshots, idempotency, order-status write protection.');
+ }finally{await db.close()}
+});

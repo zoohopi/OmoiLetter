@@ -1,0 +1,14 @@
+/* 실제 크기로 그린 쪽을 칸 너비에 맞춰 줄여 보여주는 틀 (ScaledPage) */
+.scaled {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(40, 40, 80, 0.3);
+}
+
+.scaled__inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+}
