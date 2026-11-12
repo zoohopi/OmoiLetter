@@ -2283,3 +2283,23 @@ body {
 
 /* 소개 영역의 영문 로고만 기존 크기의 150% */
 .hook__brand .wordmark { font-size: clamp(81px, 22.5vw, 156px); }
+
+/* Fade the introduction away when the interview begins. Keep its space so the
+   question and the book animation stay in the same position. */
+#p03 .inner > .center {
+  transition: opacity .45s ease, visibility .45s ease;
+}
+#p03.is-interviewing .inner > .center {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+#p03.is-interviewing .try__letter.is-shown .try__quote,
+#p03.is-interviewing .try__letter.is-shown .try__q {
+  transition-delay: .45s;
+}
+@media (prefers-reduced-motion: reduce) {
+  #p03 .inner > .center { transition: none; }
+  #p03.is-interviewing .try__letter.is-shown .try__quote,
+  #p03.is-interviewing .try__letter.is-shown .try__q { transition-delay: 0s; }
+}

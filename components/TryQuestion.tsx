@@ -128,7 +128,11 @@ export default function TryQuestion() {
             )}
           </div>
           {!shown && (
-            <button className="btn try__start" type="button" onClick={() => setShown(true)}>
+            <button className="btn try__start" type="button" onClick={() => {
+              const section = letterRef.current?.closest("section");
+              section?.classList.add("is-interviewing");
+              setShown(true);
+            }}>
               인터뷰하기
             </button>
           )}
@@ -185,3 +189,4 @@ function fly(letter: HTMLElement | null, book: HTMLElement | null) {
     src.style.transform = `translate(${to.left - from.left}px, ${to.top - from.top}px) scale(${scale})`;
   });
 }
+
