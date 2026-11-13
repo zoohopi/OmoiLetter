@@ -3,11 +3,11 @@ import { chromium } from "playwright";
 import { cookies } from "next/headers";
 import { AdminError } from "./access";
 
-export const PDF_TEMPLATE_VERSION = 1;
+export const PDF_TEMPLATE_VERSION = 2;
 const running = new Set<string>();
 export async function renderOrderPdf(orderId: string) {
   if (running.size >= 2 || running.has(orderId)) throw new AdminError("PDF를 생성 중이에요. 잠시 후 다시 눌러 주세요.", 429);
-  const base = process.env.SITE_URL || (process.env.NODE_ENV === "development" ? "http://localhost:3000" : "");
+  const base = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NODE_ENV === "development" ? "http://localhost:3000" : "");
   if (!base) throw new AdminError("서버에 SITE_URL을 설정해 주세요.", 503);
   const origin = new URL(base).origin;
   if (!/^https?:\/\//.test(origin)) throw new AdminError("사이트 주소 설정을 확인해 주세요.", 503);
@@ -16,9 +16,17 @@ export async function renderOrderPdf(orderId: string) {
   running.add(orderId);
   let browser;
   try {
-    try { browser = await chromium.launch({ headless: true, executablePath, channel }); }
+    try {
+      if (process.env.VERCEL && !executablePath) {
+        const serverless = (await import("@sparticuz/chromium")).default;
+        browser = await chromium.launch({ headless:true, executablePath:await serverless.executablePath(), args:serverless.args });
+      } else browser = await chromium.launch({ headless: true, executablePath, channel });
+    }
     catch { throw new AdminError("서버에 PDF용 Chromium을 설치하거나 PDF_BROWSER_EXECUTABLE을 설정해 주세요.", 503); }
     const context = await browser.newContext({ viewport: { width: 1100, height: 1000 }, reducedMotion: "reduce" });
+    if (process.env.VERCEL_AUTOMATION_BYPASS_SECRET) {
+      await context.setExtraHTTPHeaders({ "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET });
+    }
     const jar = await cookies();
     await context.addCookies(jar.getAll().map(({ name, value }) => ({ name, value, url: origin, secure: origin.startsWith("https:") })));
     // Only our own print route/assets may be requested by the privileged browser.

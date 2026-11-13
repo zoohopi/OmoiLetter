@@ -58,8 +58,10 @@ export default function AdminPage() {
     try {
       const response = await fetch(`/api/admin/orders/${detail.order.id}/pdf`, { cache: "no-store" });
       if (!response.ok) { const result = await response.json(); throw new Error(result.error || "PDF를 만들지 못했어요."); }
-      if (!response.headers.get("Content-Type")?.includes("application/pdf")) throw new Error("PDF 응답을 확인하지 못했어요.");
-      const url = URL.createObjectURL(await response.blob()), a = document.createElement("a");
+      const download = await response.json();
+      const file = await fetch(download.downloadUrl);
+      if (!file.ok || !file.headers.get("Content-Type")?.includes("application/pdf")) throw new Error("PDF 다운로드에 실패했어요. 다시 시도해 주세요.");
+      const url = URL.createObjectURL(await file.blob()), a = document.createElement("a");
       a.href = url; a.download = `${detail.order.order_number}-photobook.pdf`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 60000);
       const result = await api<AdminDetail>(`/api/admin/orders/${detail.order.id}`); setDetail(result);
       await reload(); setMessage("PDF를 내려받았어요. 제작소에 전달하기 전 파일을 확인해 주세요.");
