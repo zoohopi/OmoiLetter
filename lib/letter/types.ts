@@ -10,6 +10,7 @@ export type Step = "order" | "interview" | "photos" | "letters" | "preview";
 export type PhotoTransform = { scale: number; x: number; y: number };
 
 export type Draft = {
+  interviewProgress?: InterviewProgress;
   cloudId?: string;
   cloudRevision?: number;
   cloudSavedAt?: string;
@@ -38,4 +39,11 @@ export type Draft = {
   createdAt: string;
   updatedAt: string;
   submittedAt?: string;
+};
+
+export type InterviewProgress = {
+  question: string; relationship: string; turns: { question:string; answer:string }[];
+  choices:string[]; previousQuestions:string[]; current:string; answer:string; from:string;
+  polished:string|null; stage:"interview"|"review"|"options"|"final"|"relationship";
+  savedSteps:Record<number,{question:string;answer:string;choices:string[]}>;
 };

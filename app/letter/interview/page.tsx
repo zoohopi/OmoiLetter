@@ -119,9 +119,9 @@ export default function WritePage() {
       </div>
     </section>}
     {drag.ghost && createPortal(<div className="letter-drag-ghost letter-drag-ghost--cute" style={{left:drag.ghost.x+12,top:drag.ghost.y-30}}><span>“</span>{letters.find(l=>l.id===drag.ghost?.id)?.question}</div>,document.body)}
-    {aiQuestion && <AIInterview question={aiQuestion} onSelfQuestion={() => { setAiQuestion(null); addLetter(""); }} onClose={() => setAiQuestion(null)} onSave={(answer) => {
+    {aiQuestion && <AIInterview initialProgress={draft.interviewProgress} question={aiQuestion} onSelfQuestion={() => { setAiQuestion(null); addLetter(""); }} onClose={() => setAiQuestion(null)} onSave={(answer) => {
       const id = newId();
-      save((d) => ({ letters: [...d.letters!, { id, question: aiQuestion, answer, pageId: null }], step: "letters" }));
+      save((d) => ({ letters: [...d.letters!, { id, question: aiQuestion, answer, pageId: null }], step: "letters", interviewProgress: undefined }));
       setAiQuestion(null);
       router.push("/letter/letters");
     }} />}

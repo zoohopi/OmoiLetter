@@ -11,6 +11,14 @@ export const addressSchema = z.object({
 export const orderSchema = z.object({ bookId: z.uuid(), addressId: z.uuid() });
 const transform = z.object({ scale: z.number().finite().positive().max(20), x: z.number().finite(), y: z.number().finite() });
 export const draftSchema = z.object({
+  interviewProgress: z.object({
+    question:z.string().max(200), relationship:z.string().max(200),
+    turns:z.array(z.object({question:z.string().max(300),answer:z.string().max(1500)})).max(8),
+    choices:z.array(z.string().max(300)).max(3), previousQuestions:z.array(z.string().max(300)).max(24),
+    current:z.string().max(300), answer:z.string().max(1500), from:z.string().max(100), polished:z.string().max(16000).nullable(),
+    stage:z.enum(["interview","review","options","final","relationship"]),
+    savedSteps:z.record(z.string(),z.object({question:z.string().max(300),answer:z.string().max(1500),choices:z.array(z.string().max(300)).max(3)})),
+  }).optional(),
   version: z.literal(1), status: z.enum(["draft", "submitted"]),
   step: z.enum(["order", "photos", "interview", "letters", "preview"]), interviewIndex: z.number().int().nonnegative(),
   coverTitle: z.string().max(100).optional(), occasion: z.literal("lover-birthday"), recipientName: z.string().max(100), anniversaryDate: z.string().max(10),

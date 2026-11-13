@@ -260,3 +260,10 @@ export function usePhotoUrl(id: string | null | undefined) {
 
   return id && entry?.id === id && entry.owner === owner ? entry.url : null;
 }
+
+export function saveInterviewProgress(progress: import("./types").InterviewProgress) {
+  const current = readDraft();
+  if (!current || current.status !== "draft") return;
+  if (JSON.stringify(current.interviewProgress) === JSON.stringify(progress)) return;
+  writeDraft({ ...current, interviewProgress:progress, updatedAt:new Date().toISOString() });
+}
