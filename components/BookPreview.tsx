@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import BookPage, { type PageSpec } from "@/components/letter/BookPage";
+import { designOf as sampleDesignOf } from "@/lib/letter/homeSampleDesigns";
 import ScaledPage from "@/components/letter/ScaledPage";
 import { SAMPLE_DATE, SAMPLE_DESIGN, SAMPLE_NAME, SAMPLE_PAGES } from "@/lib/letter/sample";
 
@@ -111,7 +112,7 @@ export default function BookPreview() {
 export function SamplePage({ page }: { page: PageSpec }) {
   return (
     <ScaledPage>
-      <BookPage page={page} design={SAMPLE_DESIGN} size="8x8" recipientName={SAMPLE_NAME} anniversaryDate={SAMPLE_DATE} />
+      <BookPage page={page} designOverride={sampleDesignOf(SAMPLE_DESIGN)} design={SAMPLE_DESIGN} size="8x8" recipientName={SAMPLE_NAME} anniversaryDate={SAMPLE_DATE} />
     </ScaledPage>
   );
 }

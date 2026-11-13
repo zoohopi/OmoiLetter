@@ -1391,3 +1391,6 @@
 
 .preview-actions { display:flex; flex-direction:column; align-items:center; text-align:center; }
 .preview-actions .preview-actions__finish { width:auto; padding:10px 20px; font-size:14px; min-height:40px; }
+
+.done-order { background:#4067A0; color:#fff; }
+.done-order:hover { background:#35598e; }

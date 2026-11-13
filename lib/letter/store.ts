@@ -176,6 +176,12 @@ export function updateDraft(change: (d: Draft) => Partial<Draft>) {
   writeDraft(next);
 }
 
+export function reopenDraft() {
+  const current = readDraft();
+  if (!current) return;
+  writeDraft({ ...current, status: "draft", submittedAt: undefined, step: "preview", updatedAt: new Date().toISOString() });
+}
+
 export function submitDraft() {
   const current = readDraft();
   if (!current) return;

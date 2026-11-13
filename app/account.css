@@ -69,3 +69,12 @@
 }
 
 
+
+.account-button--white{background:#fff;color:#695974;border-color:#69597440;}
+
+.account-details-grid{grid-template-columns:minmax(0,1fr);width:calc(100% - 32px);max-width:520px;margin-left:auto;margin-right:auto;gap:0;}
+.account-details-grid>*,.account-details-grid .account-card{min-width:0;width:100%;box-sizing:border-box;}
+
+.account-form label.account-order-confirm{display:flex;flex-direction:row;align-items:flex-start;gap:8px;line-height:1.6;}
+.account-form .account-order-confirm input[type="checkbox"]{width:16px;height:16px;min-height:0;flex:0 0 16px;margin:4px 0 0;padding:0;accent-color:#4067a0;}
+.account-order-confirm span{flex:1;min-width:0;}

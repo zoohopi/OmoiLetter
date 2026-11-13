@@ -40,28 +40,19 @@ export default function DonePage() {
           {formatKoreanDate(new Date(y, m - 1, d))} 생일
         </p>
 
-        <div className="notice" style={{ textAlign: "left" }}>
-          <b>이다음은 이렇게 진행돼요</b>
-          <ol style={{ margin: "10px 0 0", paddingLeft: 20, color: "var(--cream-dim)" }}>
-            <li>맞춤법·띄어쓰기만 다듬어 확인을 받아요. 말투는 그대로예요.</li>
-            <li>결제 후 4일 안에 받는 분께 닿아요.</li>
-            <li>길을 떠나면 카카오톡으로 알려드려요.</li>
+        <div className="notice" style={{ textAlign: "center" }}>
+          <b>주문 전 꼭 확인해 주세요.</b>
+          <ol style={{ margin: "16px 0 0", padding: 0, listStyle: "none", color: "var(--cream-dim)", lineHeight: 1.8 }}>
+            <li>1. 사진과 글을 꼼꼼히 확인해 주세요. 주문 후에는 수정할 수 없습니다.</li>
+            <li style={{ marginTop: 12 }}>2. 지금은 무료 테스트 기간입니다. 결제 없이 접수되며, 제작·배송 일정은 별도로 안내해 드립니다.</li>
+            <li style={{ marginTop: 12 }}>3. 책을 받으신 후 문제가 있다면 연락해 주세요. 확인 후 해결을 도와드리겠습니다.</li>
           </ol>
-          <p style={{ marginTop: 12, fontSize: 13, color: "var(--cream-dim)" }}>
-            (다듬기·결제·배송 연결은 준비 중이에요)
-          </p>
         </div>
 
         <div className="actions" style={{ justifyContent: "center" }}>
-          <Link className="btn btn--small" href="/account">내 계정에 보관·주문하기</Link>
+          <Link className="btn btn--small done-order" href="/account">무료 테스트 주문하기</Link>
           <Link className="btn btn--small" href="/letter/share">
             인스타그램용 사진 받기
-          </Link>
-          <Link className="btn btn--small btn--ghost" href="/letter/print">
-            인쇄용 화면 확인 (내부)
-          </Link>
-          <Link className="link-btn" href="/start">
-            처음 화면으로
           </Link>
         </div>
       </div>

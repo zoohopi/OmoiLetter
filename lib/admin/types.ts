@@ -11,4 +11,4 @@ export type AdminDetail = {
   documents: { template_version: number; page_count: number; created_at: string }[];
   events: { id: string; action: string; created_at: string }[];
 };
-export const ORDER_STATUS: Record<string, string> = { requested: "주문 요청", awaiting_payment: "결제 대기", paid: "결제 확인", producing: "발주 완료 · 제작 중", shipped: "배송 중", delivered: "배송 완료", cancelled: "취소" };
+export const ORDER_STATUS: Record<string, string> = { requested: "무료 테스트 접수", awaiting_payment: "결제 대기", paid: "결제 확인", producing: "발주 완료 · 제작 중", shipped: "배송 중", delivered: "배송 완료", cancelled: "취소" };

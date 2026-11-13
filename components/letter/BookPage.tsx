@@ -60,6 +60,7 @@ export function sideOf(design: DesignId | undefined, layout: LayoutId | undefine
 
 type Props = {
   page: PageSpec;
+  designOverride?: ReturnType<typeof designOf>;
   design?: DesignId;
   size: BookSize;
   bleed?: boolean;
@@ -76,7 +77,7 @@ type Props = {
   /** 사진 칸에 바로 사진을 넣을 때 */
   photoEdit?: { onPhoto: (file: File) => void; busy?: boolean };
   /** 답 칸에 바로 쓸 때 */
-  textEdit?: { onChange: (value: string) => void; maxLength: number; placeholder: string };
+  textEdit?: { onQuestion?: (value: string) => void; onChange: (value: string) => void; maxLength: number; placeholder: string };
 };
 
 export type CoverEdit = {
@@ -110,8 +111,8 @@ type Ctx = {
   textEdit?: Props["textEdit"];
 };
 
-export default function BookPage({ page, design: designId, size, bleed = false, coverTitle, recipientName, anniversaryDate, coverEdit, photoUrls, coverPhotoTransform, photoTransform, photoFrame, photoAdjust, photoEdit, textEdit }: Props) {
-  const design = designOf(designId);
+export default function BookPage({ page, designOverride, design: designId, size, bleed = false, coverTitle, recipientName, anniversaryDate, coverEdit, photoUrls, coverPhotoTransform, photoTransform, photoFrame, photoAdjust, photoEdit, textEdit }: Props) {
+  const design = designOverride ?? designOf(designId);
   const pd =
     page.kind === "cover" ? design.cover : page.kind === "back" ? design.back : page.photoPage ? photoPageDesign(designId, page.layout, Boolean(page.answer.trim())) : layoutOf(design, page.layout)[page.side];
 
@@ -242,6 +243,7 @@ function Element({ el, ctx }: { el: El; ctx: Ctx }) {
     case "photo":
       return <PhotoSlot r={el.r} ctx={ctx} />;
     case "text":
+      if (el.text.includes("{q}") && ctx.textEdit?.onQuestion) return <div style={{ ...box(el.r), ...textCss(el.s) }}><QuestionEdit ctx={ctx} /></div>;
       return el.fit ? (
         <FitText style={{ ...box(el.r), ...textCss(el.s) }} deps={[el.text, ctx.question, ctx.answer]}>
           {fill(el.text, ctx)}
@@ -436,8 +438,14 @@ function shrinkToFit(el: HTMLElement) {
   }
 }
 
+function QuestionEdit({ ctx }: { ctx: Ctx }) {
+  const [editing, setEditing] = useState(false);
+  return editing ? <textarea autoFocus aria-label="편지 질문 수정" value={ctx.question} maxLength={200} onChange={e => ctx.textEdit?.onQuestion?.(e.target.value)} onBlur={() => setEditing(false)} style={{ width:"100%", height:"100%", font:"inherit", color:"inherit", background:"transparent", border:"1px solid #ed913f", resize:"none" }} /> : <span onDoubleClick={() => setEditing(true)} style={{ cursor:"text" }}>{ctx.question}</span>;
+}
+
 function AnswerSlot({ el, ctx }: { el: Extract<El, { t: "answer" }>; ctx: Ctx }) {
   const body = useRef<HTMLDivElement>(null);
+  const [editing, setEditing] = useState(false);
   useLayoutEffect(() => {
     if (body.current) shrinkToFit(body.current);
   }, [ctx.answer, ctx.question]);
@@ -449,10 +457,12 @@ function AnswerSlot({ el, ctx }: { el: Extract<El, { t: "answer" }>; ctx: Ctx })
   return (
     <div className="tp-answer" style={box(el.r)}>
       {el.head && (
-        <div style={{ ...textCss(el.head.s), marginBottom: `calc(var(--pt) * ${el.head.gap})` }}>{fill(el.head.text, ctx)}</div>
+        <div style={{ ...textCss(el.head.s), marginBottom: `calc(var(--pt) * ${el.head.gap})` }}>{ctx.textEdit?.onQuestion ? <QuestionEdit ctx={ctx} /> : fill(el.head.text, ctx)}</div>
       )}
-      {ctx.textEdit ? (
+      {ctx.textEdit && editing ? (
         <textarea
+          autoFocus
+          onBlur={() => setEditing(false)}
           className="tp-answer__input"
           style={{ ...textCss(el.s), textAlign: "justify", textAlignLast: "left", textJustify: "inter-character" }}
           value={ctx.answer}
@@ -462,7 +472,7 @@ function AnswerSlot({ el, ctx }: { el: Extract<El, { t: "answer" }>; ctx: Ctx })
           onChange={(e) => ctx.textEdit!.onChange(e.target.value)}
         />
       ) : (
-        <div ref={body} className="tp-answer__body" style={{ ...textCss(el.s), ...columns, textAlign: "justify", textAlignLast: "left", textJustify: "inter-character" }}>
+        <div onDoubleClick={() => ctx.textEdit && setEditing(true)} ref={body} className="tp-answer__body" style={{ ...textCss(el.s), ...columns, textAlign: "justify", textAlignLast: "left", textJustify: "inter-character" }}>
           {ctx.answer}
         </div>
       )}

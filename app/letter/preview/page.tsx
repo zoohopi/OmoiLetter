@@ -99,6 +99,7 @@ export default function PreviewPage() {
 
 // 두 번 누르면 그 쪽만 고치는 상태가 된다. 표지·사진·글만 고칠 수 있다.
 function Page({ draft, page, editing, setEditing }: { draft: Draft; page: PageSpec; editing: boolean; setEditing: (on: boolean) => void }) {
+  const [photoMode, setPhotoMode] = useState<"image" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const leaf = page.kind === "leaf" && page.qid ? page : null;
@@ -119,6 +120,7 @@ function Page({ draft, page, editing, setEditing }: { draft: Draft; page: PageSp
   };
 
   const on = editing && editable;
+  const attachedLetters = leaf ? draft.letters?.filter(l => l.pageId === leaf.qid) ?? [] : [];
 
   return (
     <div
@@ -129,13 +131,13 @@ function Page({ draft, page, editing, setEditing }: { draft: Draft; page: PageSp
       <ScaledPage>
         <BookPage
           page={page}
-          {...photoEditorProps(draft, page.kind === "cover" ? "cover" : leaf?.qid ?? "", null, () => {}, false)}
+          {...photoEditorProps(draft, page.kind === "cover" ? "cover" : leaf?.qid ?? "", on ? photoMode : null, (mode) => { setEditing(true); setPhotoMode(mode); }, true)}
           design={draft.design}
           size={draft.bookSize}
           recipientName={draft.recipientName}
           coverTitle={draft.coverTitle} anniversaryDate={draft.anniversaryDate}
           coverEdit={
-            on && page.kind === "cover"
+            page.kind === "cover"
               ? {
                   onPhoto: (f) => void runPhoto(() => setCoverPhoto(f)),
                   onTitle: (v) => updateDraft(() => ({ coverTitle: v })),
@@ -147,23 +149,31 @@ function Page({ draft, page, editing, setEditing }: { draft: Draft; page: PageSp
               : undefined
           }
           photoEdit={
-            on && leaf && photoSide
+            leaf && photoSide
               ? { onPhoto: (f) => void runPhoto(() => setQuestionPhoto(leaf.qid!, f)), busy }
               : undefined
           }
           textEdit={
-            on && leaf && !photoSide
+            leaf && attachedLetters.length <= 1
               ? {
                   maxLength: MAX_ANSWER_LENGTH,
                   placeholder: "",
-                  // 다 지우면 이 펼침이 책에서 빠지므로, 미리보기에서는 빈칸으로 만들지 않는다
-                  onChange: (v) =>
-                    v.trim() && updateDraft((d) => ({ answers: { ...d.answers, [leaf.qid!]: v } })),
+                  onQuestion: (v) => updateDraft((d) => ({ letters: d.letters?.map((l) => l.pageId === leaf.qid ? { ...l, question: v } : l) })),
+                  onChange: (v) => updateDraft((d) => {
+                    const attached = d.letters?.filter((l) => l.pageId === leaf.qid);
+                    return attached?.length ? { letters: d.letters?.map((l) => l.pageId === leaf.qid ? { ...l, answer: l.id === attached[0].id ? v : "" } : l) } : { answers: { ...d.answers, [leaf.qid!]: v } };
+                  }),
                 }
               : undefined
           }
         />
       </ScaledPage>
+      {on && attachedLetters.length > 1 && <div className="pv-edit-bar" style={{ display:"grid" }}>
+        {attachedLetters.map(letter => <div key={letter.id}>
+          <label>질문<textarea aria-label="편지 질문 수정" value={letter.question} onChange={e => updateDraft(d => ({ letters:d.letters?.map(l => l.id === letter.id ? { ...l, question:e.target.value } : l) }))} /></label>
+          <label>편지 내용<textarea aria-label="편지 내용 수정" value={letter.answer} maxLength={MAX_ANSWER_LENGTH} onChange={e => updateDraft(d => ({ letters:d.letters?.map(l => l.id === letter.id ? { ...l, answer:e.target.value } : l) }))} /></label>
+        </div>)}
+      </div>}
       {on && leaf && <LayoutPick design={draft.design} qid={leaf.qid!} value={leaf.layout} />}
       {on && (
         <div className="pv-edit-bar">

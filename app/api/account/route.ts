@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const a = parsed.data;
     const row = { label: a.label, recipient_name: a.recipientName, phone: a.phone, postal_code: a.postalCode, address1: a.address1, address2: a.address2, delivery_note: a.deliveryNote };
     const result = a.id ? await db.from("addresses").update(row).eq("id", a.id).eq("user_id", user.id).select("id").single() : await db.from("addresses").insert({ ...row, user_id: user.id }).select("id").single();
-    return result.error ? json({ error: "배송지를 저장하지 못했어요." }, 500) : json({ ok: true });
+    return result.error ? json({ error: "배송지를 저장하지 못했어요." }, 500) : json({ ok: true, addressId: result.data.id });
   }
   if (body.action === "delete-address" && typeof body.id === "string") {
     const { error } = await db.from("addresses").delete().eq("id", body.id).eq("user_id", user.id);
