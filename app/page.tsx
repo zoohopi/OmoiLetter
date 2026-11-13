@@ -71,7 +71,7 @@ export default function Home() {
               <p className="hook__line">고마워.</p>
             </div>
             <p className="hook__question">
-              늘 마음속에 있는 말인데, 왜 이렇게 꺼내기 어려울까요.
+              늘 마음속에 있는 말인데<br />왜 이렇게 꺼내기 어려울까요.
             </p>
 
             <div className="hook__brand">
@@ -131,12 +131,12 @@ export default function Home() {
             <Reveal className="center">
               <p className="eyebrow">p.06</p>
               <h2 className="headline">
-                책으로 주문 전에, 사진으로 먼저 만나보세요.
+                책으로 주문 전에<br />사진으로 먼저 만나보세요
               </h2>
               <p className="lead">
-                실제 책으로 구매전 인스타그램 공유용을 무료로 전달드려요.
+                실제 책으로 구매전 인스타그램 공유용을<br />무료로 전달드려요.
                 <br />
-                <strong>편지 글은 담지 않고, 표지와 사진만 보여 줘요.</strong>
+                <strong>편지는 담지 않고, 표지와 사진만 보여줘요.</strong>
               </p>
             </Reveal>
 

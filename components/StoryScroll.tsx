@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -15,7 +15,7 @@ const STORY: string[][] = [
   ["무슨 말부터 써야 할지,", "시작조차 어려웠습니다."],
   ["그러다 알게 됐습니다."],
   ["**“속마음을 표현하는 법을 모르는구나.”**"],
-  ["그래서 오모이레터를 만들었습니다.", "마음은 있는데 꺼내기 어려운 분들을 위해."],
+  ["그래서 오모이레터를 만들었습니다.", "마음은 있는데 꺼내기", "어려운 분들을 위해"],
   ["그 마음을 받은 사람이, 웃을 수 있도록."],
   ["그 마음을 전한 당신이, 웃을 수 있도록."],
 ];
@@ -31,6 +31,7 @@ function Line({ text }: { text: string }) {
 }
 
 export default function StoryScroll() {
+  const [mobilePage, setMobilePage] = useState(-1);
   const root = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function StoryScroll() {
     gsap.registerPlugin(ScrollTrigger);
     const mm = gsap.matchMedia();
 
-    mm.add("(prefers-reduced-motion: no-preference)", () => {
+    mm.add("(min-width: 769px) and (prefers-reduced-motion: no-preference)", () => {
       const paras = gsap.utils.toArray<HTMLElement>(".story-scroll__para", el);
       const sign = el.querySelector(".story__sign");
       const heading = gsap.utils.toArray<HTMLElement>(".story-scroll__inner > .eyebrow, .story-scroll__inner > .headline", el);
@@ -80,6 +81,18 @@ export default function StoryScroll() {
 
   return (
     <div className="story-scroll" ref={root}>
+      <div className="story-mobile">
+        {mobilePage < 0 && <><p className="eyebrow">p.02</p><h2 className="headline">오모이레터를 만든 이유</h2></>}
+        <button type="button" className="story-mobile__letter" onClick={() => setMobilePage((page) => Math.min(page + 1, STORY.length - 1))} disabled={mobilePage === STORY.length - 1} aria-label={mobilePage < 0 ? "터치해서 이야기 읽기" : "다음 편지 내용 읽기"}>
+          <span aria-live="polite">{mobilePage < 0 ? "터치해서 이야기를 읽어 보세요." : STORY[mobilePage].map((line, i) => <span key={`${mobilePage}-${i}`}><Line text={line} />{i < STORY[mobilePage].length - 1 && <br />}</span>)}</span>
+        </button>
+        <div className="story-mobile__controls">
+          {mobilePage >= 0 && <button type="button" onClick={() => setMobilePage((page) => page - 1)}>← 이전</button>}
+          <span>{mobilePage < 0 ? "" : `${mobilePage + 1} / ${STORY.length}`}</span>
+          {mobilePage >= 0 && mobilePage < STORY.length - 1 && <button type="button" onClick={() => setMobilePage((page) => Math.min(page + 1, STORY.length - 1))}>다음 →</button>}
+          {mobilePage === STORY.length - 1 && <span>아래로 스크롤해 주세요</span>}
+        </div>
+      </div>
       <div className="story-scroll__inner">
         <p className="eyebrow">p.02</p>
         <h2 className="headline">오모이레터를 만든 이유</h2>

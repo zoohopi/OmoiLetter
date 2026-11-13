@@ -150,14 +150,14 @@ export default function StartPage() {
           {past && (
             <div className="notice">
               <b>이번 기념일 전에 닿기는 어려울 것 같아요.</b>
-              <p style={{ marginTop: 6 }}>편지를 완성한 뒤 제작과 배송에 4일이 걸려요. 그래도 마음은 늦지 않았어요.</p>
-              <label>
+              <p style={{ marginTop: 6 }}>편지를 완성한 뒤 제작과 배송이 4일 걸려요.<br />그래도 마음은 늦지 않았어요.</p>
+              <label className="start-late-confirm">
                 <input
                   type="checkbox"
                   checked={draft.lateAccepted}
                   onChange={(e) => updateDraft(() => ({ lateAccepted: e.target.checked }))}
                 />
-                기념일 이후에 도착해도 괜찮아요.
+                기념일 이후 도착해도 괜찮아요.
               </label>
             </div>
           )}
