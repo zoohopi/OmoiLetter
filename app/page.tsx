@@ -21,11 +21,11 @@ export default function Home() {
     <>
       <Topbar />
 
-      <main>
+      <main className="omoi-home">
         {/* HERO — 맨 첫 화면: 사진·영상만 (글자 없음). 영상이 나오면 이 자리에 넣는다 */}
         <section id="hero" className="hero" aria-label="Omoi Letter">
           <div className="hero__media" aria-hidden="true" />
-          {/* 손하트 → 장미 → 노을 하늘(想い Omoi) 순서로 번갈아 */}
+          {/* 구름 하늘 → 손하트 → 장미 순서로 번갈아 */}
           <div className="hero__media hero__media--rose" aria-hidden="true" />
           <div className="hero__media hero__media--sky" aria-hidden="true" />
           <p className="hero__cue" aria-hidden="true">
@@ -38,11 +38,11 @@ export default function Home() {
           <div className="inner center">
             <Reveal>
               <p className="eyebrow">p.01</p>
-              <h2 className="headline">편지에 남기고 싶은 사진을 넣어 주세요.</h2>
+              <h2 className="headline">마음을 인터뷰하고, 편지로 전합니다</h2>
               <p className="lead">
-                사진은 몇 장이면 충분합니다.
+                사진을 고르고, 인터뷰 질문에 답해 주세요.
                 <br />
-                <strong>글과 함께 기억하고 싶은 추억을 편지에 담아 주세요.</strong>
+                <strong>당신의 말과 추억이 한 권의 편지가 됩니다.</strong>
               </p>
             </Reveal>
             <Reveal delay={200}>
@@ -66,22 +66,21 @@ export default function Home() {
         <section id="p01" className="page hook">
           <div className="inner">
             <div className="hook__lines" aria-label="미안해. 사랑해. 고마워.">
-              <Reveal as="p" className="hook__line">미안해.</Reveal>
-              <Reveal as="p" className="hook__line" delay={650}>사랑해.</Reveal>
-              <Reveal as="p" className="hook__line" delay={1300}>고마워.</Reveal>
+              <p className="hook__line">미안해.</p>
+              <p className="hook__line">사랑해.</p>
+              <p className="hook__line">고마워.</p>
             </div>
-            <Reveal as="p" className="hook__question" delay={2050}>
+            <p className="hook__question">
               늘 마음속에 있는 말인데, 왜 이렇게 꺼내기 어려울까요.
-            </Reveal>
+            </p>
 
-            <Reveal className="hook__brand" delay={2800}>
+            <div className="hook__brand">
               <h1 className="wordmark">
                 Omoi Letter
-                <small>(想い Letter)</small>
+                <small><span className="brand-description-hand">오모이레터</span> (<span lang="ja" className="japanese-word">想い</span> <span className="brand-description-hand">Omoi</span> : 생각하는 마음)</small>
               </h1>
-              <p className="slogan">말하지 못한 마음을, 한 권의 편지로</p>
               <p className="subcopy">누군가를 생각하는 마음을 인터뷰하고, 편지로 전합니다.</p>
-            </Reveal>
+            </div>
 
             <p className="scroll-cue">
 
@@ -132,12 +131,10 @@ export default function Home() {
             <Reveal className="center">
               <p className="eyebrow">p.06</p>
               <h2 className="headline">
-                편지는 그 사람에게만,
-                <br />
-                추억은 인스타그램에
+                책으로 주문 전에, 사진으로 먼저 만나보세요.
               </h2>
               <p className="lead">
-                완성한 편지책을 인스타그램에 올리기 좋은 사진으로 만들어 드려요.
+                실제 책으로 구매전 인스타그램 공유용을 무료로 전달드려요.
                 <br />
                 <strong>편지 글은 담지 않고, 표지와 사진만 보여 줘요.</strong>
               </p>
@@ -203,9 +200,8 @@ export default function Home() {
             <Reveal>
               <p className="wordmark">
                 Omoi Letter
-                <small>(想い Letter)</small>
+                <small><span className="brand-description-hand">오모이레터</span> (<span lang="ja" className="japanese-word">想い</span> <span className="brand-description-hand">Omoi</span> : 생각하는 마음)</small>
               </p>
-              <h2 className="slogan">말하지 못한 마음을, 한 권의 편지로</h2>
               <p className="subcopy">누군가를 생각하는 마음을 인터뷰하고, 편지로 전합니다.</p>
             </Reveal>
             <Reveal className="exit__cta" delay={200}>

@@ -78,3 +78,13 @@
 .account-form label.account-order-confirm{display:flex;flex-direction:row;align-items:flex-start;gap:8px;line-height:1.6;}
 .account-form .account-order-confirm input[type="checkbox"]{width:16px;height:16px;min-height:0;flex:0 0 16px;margin:4px 0 0;padding:0;accent-color:#4067a0;}
 .account-order-confirm span{flex:1;min-width:0;}
+
+.topbar .account-nav-link { min-height:40px; padding:8px 15px; gap:7px; }
+@media(max-width:640px) { .topbar .account-nav-link { padding:8px 12px; } }
+
+.account-book-grid .account-card{position:relative;padding-right:62px;}
+.account-book-delete{position:absolute;right:12px;top:12px;display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:transparent;color:#c54d55;cursor:pointer;}
+.account-book-delete:hover:enabled{background:#c54d5510;}
+.account-book-delete:focus-visible{outline:2px solid #c54d55;outline-offset:2px;}
+
+.account-container > .account-error { margin:16px 0 24px; padding:12px 16px; line-height:1.6; }

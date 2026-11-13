@@ -13,7 +13,7 @@ const ANSWER_LINES = ["동석이 생일 파티에서 너를 처음 봤었어.", 
 const SAMPLE = ANSWER_LINES.join("\n");
 // 줄마다 첫 글자의 번호 (한 글자씩 나타나는 순서가 줄을 넘어 이어진다)
 const LINE_START = ANSWER_LINES.map((_, i) => ANSWER_LINES.slice(0, i).reduce((sum, l) => sum + l.length + 1, 0));
-const STEP_MS = 85; // 한 글자 간격
+const STEP_MS = 42.5; // 한 글자 간격 · 기존보다 2배 빠르게
 const SETTLE_MS = 900; // 다 쓴 뒤 잠깐 머무는 시간
 const BOOK_FADE_MS = 700; // 뒤에 책이 나타나는 시간
 const FLY_MS = 1200; // 글씨가 책 제자리로 가는 시간
@@ -184,9 +184,14 @@ function fly(letter: HTMLElement | null, book: HTMLElement | null) {
     range.selectNodeContents(src);
     const from = range.getBoundingClientRect();
     const to = lineRect(dest, Number(src.dataset.line ?? 0));
+    if (!from.height || !to.height) return;
+    let zoom = 1;
+    for (let node: HTMLElement | null = src; node; node = node.parentElement) {
+      zoom *= Number.parseFloat(getComputedStyle(node).zoom) || 1;
+    }
     const scale = to.height / from.height;
-    src.style.transformOrigin = `${from.left - box.left}px ${from.top - box.top}px`;
-    src.style.transform = `translate(${to.left - from.left}px, ${to.top - from.top}px) scale(${scale})`;
+    src.style.transformOrigin = `${(from.left - box.left) / zoom}px ${(from.top - box.top) / zoom}px`;
+    src.style.transform = `translate(${(to.left - from.left) / zoom}px, ${(to.top - from.top) / zoom}px) scale(${scale})`;
   });
 }
 

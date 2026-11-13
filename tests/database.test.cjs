@@ -16,6 +16,7 @@ test('member isolation, revisions, immutable orders and private photos',async()=
  grant all on storage.objects to authenticated;
  `);
  await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/202611040001_members_books_orders.sql'),'utf8'));
+ await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/202611130001_delete_saved_books.sql'),'utf8'));
  const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222',book='33333333-3333-4333-8333-333333333333';
  await db.query(`insert into auth.users(id) values($1),($2)`,[a,b]);
  const as=async(id)=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated')};
@@ -51,6 +52,12 @@ test('member isolation, revisions, immutable orders and private photos',async()=
  await db.exec('reset role');await db.query("insert into public.shipments(order_id,carrier,tracking_number) values($1,'CJ대한통운','1234')",[order]);
  await as(b);assert.equal((await db.query('select * from public.shipments')).rows.length,0);
  await as(a);assert.equal((await db.query('select * from public.shipments')).rows.length,1);
+ await fails('select public.delete_my_book($1)',[book],'23503');
+ const disposable='44444444-4444-4444-8444-444444444444';
+ await save(0,{...draft,status:'draft',coverPhotoId:null,bookPhotos:[],letters:[]},disposable,{});
+ await as(b);await fails('select public.delete_my_book($1)',[disposable],'22023');
+ await as(a);await db.query('select public.delete_my_book($1)',[disposable]);
+ assert.equal((await db.query('select id from public.books where id=$1',[disposable])).rows.length,0);
  console.log('Verified: migration, private storage, A/B isolation, stale revisions, frozen snapshots, idempotency, order-status write protection.');
  }finally{await db.close()}
 });

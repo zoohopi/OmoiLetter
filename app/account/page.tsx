@@ -6,7 +6,7 @@ import { photoEditorProps } from "@/components/letter/PhotoTools";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { useAccount } from "@/components/account/AccountProvider";
-import { getGuestDraft, importGuestDraft, useDraft, createDraft, reopenDraft, copyCurrentDraft } from "@/lib/letter/store";
+import { getGuestDraft, importGuestDraft, useDraft, createDraft, discardDraft, reopenDraft, copyCurrentDraft } from "@/lib/letter/store";
 import { openBook } from "@/lib/account/cloud";
 
 type Address = { id: string; label: string; recipient_name: string; phone: string; postal_code: string; address1: string; address2: string; delivery_note: string };
@@ -72,7 +72,14 @@ export default function AccountPage() {
         if (draft && draft.cloudSavedAt !== draft.updatedAt && !await saveNow()) throw new Error("현재 책을 먼저 보관해 주세요.");
         createDraft(); router.push("/start");
       })}>새 책 만들기 +</button></div>
-      <div className="account-book-grid">{data?.books.slice().sort((a, b) => Number(b.id === draft?.cloudId) - Number(a.id === draft?.cloudId)).map(book => <article key={book.id} className="account-card"><p className="account-eyebrow">{book.status === "submitted" ? "완성한 책" : "작성 중"}</p><h3>{book.title}</h3><p className="account-fine">{new Date(book.updated_at).toLocaleDateString("ko-KR")} 저장</p><div className="account-actions"><button className="account-button" disabled={busy || saving} onClick={() => continueBook(book)}>책 열기</button>{book.status === "submitted" && <button className="account-button account-button--outline" onClick={() => { setOrderBook(book.id); setTab("orders"); }}>무료 테스트 주문하기</button>}</div></article>)}</div>
+      <div className="account-book-grid">{data?.books.slice().sort((a, b) => Number(b.id === draft?.cloudId) - Number(a.id === draft?.cloudId)).map(book => <article key={book.id} className="account-card"><p className="account-eyebrow">{book.status === "submitted" ? "완성한 책" : "작성 중"}</p><h3>{book.title}</h3><p className="account-fine">{new Date(book.updated_at).toLocaleDateString("ko-KR")} 저장</p><div className="account-actions"><button className="account-button" disabled={busy || saving} onClick={() => continueBook(book)}>책 열기</button><button className="account-book-delete" aria-label={`${book.title} 삭제`} title={data.orders.some(order => order.book_id === book.id) ? "주문에 사용된 책은 삭제할 수 없어요" : "책 삭제"} disabled={busy || saving || data.orders.some(order => order.book_id === book.id)} onClick={() => {
+        if (!confirm(`‘${book.title}’ 책을 삭제할까요? 삭제한 책은 복구할 수 없어요.`)) return;
+        void run(async () => {
+          await request("/api/account", { action:"delete-book", id:book.id });
+          if (draft?.cloudId === book.id) await discardDraft();
+          await reload(); setMessage("책을 삭제했어요.");
+        });
+      }}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg></button>{book.status === "submitted" && <button className="account-button account-button--outline" onClick={() => { setOrderBook(book.id); setTab("orders"); }}>무료 테스트 주문하기</button>}</div></article>)}</div>
       {data && !data.books.length && <p className="account-empty">첫 편지책을 만들어 보세요. 로그인한 동안 작업은 자동으로 보관돼요.</p>}
     </>}
     {tab === "orders" && <>

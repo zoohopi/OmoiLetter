@@ -2354,3 +2354,32 @@ body {
   margin: 0;
 }
 
+
+/* Larger homepage content on laptop/desktop; full-bleed hero and maker unchanged. */
+@media (min-width: 1024px) {
+  .omoi-home > .page > .inner { zoom: 1.15; }
+  body:has(.omoi-home) .topbar { zoom: 1.15; }
+}
+
+
+
+/* Intro copy is permanently visible; no entrance animation or hidden state. */
+.omoi-home .hook__line,
+.omoi-home .hook__question,
+.omoi-home .hook__brand { opacity:1; visibility:visible; filter:none; transform:none; animation:none; transition:none; }
+
+.japanese-word{font-family:var(--font-body),sans-serif;font-weight:400;font-style:normal;}
+
+/* Start the existing three-scene loop at the cloud scene. */
+.hero__media--rose, .hero__media--sky { animation-duration:6s; animation-delay:-3.78s; }
+@media(prefers-reduced-motion:reduce) { .hero__media--sky { opacity:1; } }
+
+.story-scroll__stage { position:relative; top:-60px; }
+
+.hook__brand { margin-top:144px; }
+
+/* Logo description typography, independent of floating-button styles. */
+.brand-description-hand { font-family:var(--font-title),cursive; font-weight:400; font-size:1.1em; }
+.hook__brand .wordmark + .subcopy, .exit .wordmark + .subcopy { margin-top:12px; }
+
+.wordmark small { margin-top:42px; }

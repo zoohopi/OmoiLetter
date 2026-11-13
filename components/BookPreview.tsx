@@ -35,7 +35,7 @@ export default function BookPreview() {
         scrollTrigger: {
           id: "book-pages",
           trigger: section,
-          // p.01 번호가 상단 바 아래에 보이는 지점에서 더 일찍 고정한다.
+          // Pin after the full book clears the viewport bottom, keeping the heading when space allows.
           start: () => {
             const eyebrow = section.querySelector<HTMLElement>(".eyebrow");
             const headline = section.querySelector<HTMLElement>(".headline");
@@ -46,9 +46,15 @@ export default function BookPreview() {
               for (let n: HTMLElement | null = node; n; n = n.offsetParent as HTMLElement | null) sum += n.offsetTop;
               return sum;
             };
-            const eyebrowOffset = y(eyebrow) - y(section as HTMLElement);
-            const bar = document.querySelector<HTMLElement>(".topbar")?.offsetHeight ?? 0;
-            return `top+=${eyebrowOffset} top+=${bar + 16}`;
+            const inner = section.querySelector<HTMLElement>(".inner");
+            const zoom = inner ? Number.parseFloat(getComputedStyle(inner).zoom) || 1 : 1;
+            const eyebrowOffset = (y(eyebrow) - y(section as HTMLElement)) * zoom;
+            const bar = document.querySelector<HTMLElement>(".topbar")?.getBoundingClientRect().height ?? 0;
+            const stage = el.querySelector<HTMLElement>(".book__stage");
+            const bookBottom = stage ? (y(stage) - y(section as HTMLElement) + stage.offsetHeight) * zoom : 0;
+            const headingStart = eyebrowOffset - bar - 16;
+            const bookStart = bookBottom - window.innerHeight + 32;
+            return `top+=${Math.max(headingStart, bookStart)} top`;
           },
           end: () => `+=${window.innerHeight * 3.2}`,
           pin: true,

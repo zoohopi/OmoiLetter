@@ -141,7 +141,7 @@ const magazine: Design = {
     els: [
       { t: "photo", r: [0, 0, 398, PAGE_PT] },
       { t: "text", r: [422, 44, 582, 144], text: "OMOI\nLetter", s: gSerif(29, 32) },
-      { t: "text", r: [422, 180, 572, 290], text: "A LETTER FOR YOU\n말하지 못한 마음을,\n한 권의 편지로.", s: gSerif(9, 17) },
+      { t: "text", r: [422, 180, 572, 290], text: "A LETTER FOR YOU\n{coverTitle}", s: gSerif(9, 17) },
       { t: "text", r: [422, 505, 572, 535], text: "To. {name}", s: gSerif(10, 16) },
       { t: "text", r: [422, 535, 572, 555], text: "{date}", s: gArial(8, 12.8, { track: 80 }) },
     ],

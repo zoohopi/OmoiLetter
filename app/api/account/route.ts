@@ -41,6 +41,12 @@ export async function POST(request: NextRequest) {
     const result = a.id ? await db.from("addresses").update(row).eq("id", a.id).eq("user_id", user.id).select("id").single() : await db.from("addresses").insert({ ...row, user_id: user.id }).select("id").single();
     return result.error ? json({ error: "배송지를 저장하지 못했어요." }, 500) : json({ ok: true, addressId: result.data.id });
   }
+  if (body.action === "delete-book" && typeof body.id === "string") {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.id)) return json({ error:"책을 확인해 주세요." }, 400);
+    const { error } = await db.rpc("delete_my_book", { p_book_id:body.id });
+    if (error) return json({ error: error.code === "23503" ? "주문에 사용된 책은 삭제할 수 없어요." : error.code === "PGRST202" ? "Supabase에 책 삭제 함수가 아직 등록되지 않았어요. SQL Editor에서 책 삭제 설치 SQL을 실행해 주세요." : "책을 삭제하지 못했어요. 다시 시도해 주세요." }, 400);
+    return json({ ok:true });
+  }
   if (body.action === "delete-address" && typeof body.id === "string") {
     const { error } = await db.from("addresses").delete().eq("id", body.id).eq("user_id", user.id);
     return error ? json({ error: "배송지를 삭제하지 못했어요." }, 500) : json({ ok: true });

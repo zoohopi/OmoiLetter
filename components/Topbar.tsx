@@ -45,7 +45,7 @@ export default function Topbar() {
         <a className="topbar__brand" href={`#${PAGES[0].id}`}>
           Omoi Letter
         </a>
-        <AccountLink />
+        <AccountLink start />
       </header>
     </>
   );

@@ -111,6 +111,7 @@ export default function StartPage() {
                 coverTitle={draft.coverTitle} anniversaryDate={draft.anniversaryDate}
                 {...photoEditorProps(draft, "cover", photoMode, setPhotoMode)}
                 coverEdit={{
+                  readOnlyText: true,
                   onPhoto: (f) => void onPhoto(f),
                   onTitle: (v) => updateDraft(() => ({ coverTitle: v })),
                   onName: (v) => updateDraft(() => ({ recipientName: v })),
@@ -124,6 +125,16 @@ export default function StartPage() {
             {draft.coverPhotoId && <PhotoTools draft={draft} scope="cover" mode={photoMode} setMode={setPhotoMode} />}
 
           </div>
+          <section className="start-cover-fields" aria-labelledby="cover-details-heading">
+            <h2 id="cover-details-heading">표지에 담을 내용을 적어 주세요</h2>
+            <p>입력한 내용이 위 표지에 바로 반영돼요.</p>
+            <label htmlFor="cover-title">제목</label>
+            <textarea id="cover-title" rows={2} maxLength={100} value={draft.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로."} onChange={e => updateDraft(() => ({ coverTitle:e.target.value }))} placeholder="책 제목을 입력해 주세요" />
+            <label htmlFor="cover-recipient">받으시는 분</label>
+            <input id="cover-recipient" type="text" maxLength={12} autoComplete="off" value={draft.recipientName} onChange={e => updateDraft(() => ({ recipientName:e.target.value }))} placeholder="이름 또는 애칭을 입력해 주세요" />
+            <label htmlFor="cover-anniversary">기념일</label>
+            <input id="cover-anniversary" type="date" min={todayString()} value={draft.anniversaryDate} onChange={e => updateDraft(() => ({ anniversaryDate:e.target.value, lateAccepted:false }))} />
+          </section>
           <ul className="start-todo">
             {todo.map((t) => (
               <li key={t.text} className={t.done ? "is-done" : ""}>

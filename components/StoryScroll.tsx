@@ -95,11 +95,7 @@ export default function StoryScroll() {
             </p>
           ))}
         </div>
-        <p className="story__sign">
-          <b>오모이레터 (想い Omoi : 생각하는 마음)</b>
-          <br />
-          누군가를 생각하는 마음을 인터뷰하고, 편지로 전합니다.
-        </p>
+
       </div>
     </div>
   );

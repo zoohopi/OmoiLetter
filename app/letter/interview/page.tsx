@@ -64,7 +64,7 @@ export default function WritePage() {
   }
   const ready = validCount && letters.some((l) => l.question.trim() && l.answer.trim() && photos.some((p) => p.id === l.pageId));
 
-  return <main className="maker maker--compose letter-stage"><div className="maker__inner maker__inner--wide">
+  return <main className={`maker maker--compose letter-stage${isPlacement ? "" : " letter-stage--interview"}`}><div className="maker__inner maker__inner--wide">
     <p className="eyebrow">{isPlacement ? "STEP 4 · 편지" : "STEP 3 · 인터뷰"}</p>
     <h1 className="maker__title">{isPlacement ? "편지로 마음을 전해요" : "인터뷰로 마음을 꺼내요"}</h1>
     <p className="maker__lead">{isPlacement ? "작성한 편지를 원하는 페이지에 넣어 주세요." : "인터뷰를 통해 전하고 싶은 마음을 천천히 풀어보세요."}</p>

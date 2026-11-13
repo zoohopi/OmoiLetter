@@ -81,6 +81,7 @@ type Props = {
 };
 
 export type CoverEdit = {
+  readOnlyText?: boolean;
   adjustingPhoto?: boolean;
   onAdjustPhoto?: () => void;
   onPhotoTransform?: (value: PhotoTransform) => void;
@@ -372,6 +373,10 @@ function PhotoSlot({ r, ctx }: { r: Rect; ctx: Ctx }) {
 function CoverText({ text, ctx }: { text: string; ctx: Ctx }) {
   const edit = ctx.coverEdit!;
   const [editingTitle, setEditingTitle] = useState(false);
+  if (edit.readOnlyText) {
+    const display = text.replaceAll("{name}", ctx.name).replaceAll("{date}", ctx.date ? formatDate(ctx.date, ". ") : "").replaceAll("{dateDot}", ctx.date ? formatDate(ctx.date, ".") : "");
+    return <>{fill(display, ctx)}</>;
+  }
   if (text === "{coverTitle}") {
     return editingTitle ? <textarea autoFocus aria-label="표지 제목" maxLength={100} value={ctx.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로."} onChange={(e) => edit.onTitle?.(e.target.value)} onBlur={() => setEditingTitle(false)} style={{ width: "100%", height: "100%", font: "inherit", color: "inherit", background: "transparent", border: "1px solid #4067a0", resize: "none" }} /> : <span className="cover-title-edit" onDoubleClick={() => setEditingTitle(true)}>
       <span>{fill(text, ctx)}</span>
