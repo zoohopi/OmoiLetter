@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { adminOrder, adminFailure, adminJson, AdminError } from "@/lib/admin/access";
 import { PDF_TEMPLATE_VERSION, renderOrderPdf } from "@/lib/admin/pdf";
-export const maxDuration = 120;
+export const maxDuration = 300;
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;

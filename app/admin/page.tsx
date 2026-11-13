@@ -56,16 +56,21 @@ export default function AdminPage() {
     if (!detail || busy) return;
     setBusy(true); setDetailError(""); setMessage("PDF를 준비하고 있어요. 사진이 많으면 잠시 걸릴 수 있어요.");
     try {
-      const response = await fetch(`/api/admin/orders/${detail.order.id}/pdf`, { cache: "no-store" });
-      if (!response.ok) { const result = await response.json(); throw new Error(result.error || "PDF를 만들지 못했어요."); }
-      const download = await response.json();
-      const file = await fetch(download.downloadUrl);
-      if (!file.ok || !file.headers.get("Content-Type")?.includes("application/pdf")) throw new Error("PDF 다운로드에 실패했어요. 다시 시도해 주세요.");
-      const url = URL.createObjectURL(await file.blob()), a = document.createElement("a");
-      a.href = url; a.download = `${detail.order.order_number}-photobook.pdf`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 60000);
-      const result = await api<AdminDetail>(`/api/admin/orders/${detail.order.id}`); setDetail(result);
-      await reload(); setMessage("PDF를 내려받았어요. 제작소에 전달하기 전 파일을 확인해 주세요.");
-    } catch (e) { setMessage(""); setDetailError(e instanceof Error ? e.message : "PDF를 만들지 못했어요."); }
+      const response = await fetch(`/api/admin/orders/${detail.order.id}/pdf`, { cache: "no-store", signal: AbortSignal.timeout(240000) });
+      const text = await response.text();
+      let download;
+      try { download = JSON.parse(text); } catch { throw new Error(`PDF 서버 응답 오류 (${response.status}). 원고 미리보기에서 PDF로 저장하거나 잠시 후 재시도해 주세요.`); }
+      if (!response.ok) throw new Error(download.error || "PDF를 만들지 못했어요.");
+      if (!download.downloadUrl) throw new Error("PDF 다운로드 주소가 없어요.");
+      // Let the browser stream the private file directly to Downloads instead
+      // of fetching the whole large PDF into JavaScript memory first.
+      const a = document.createElement("a");
+      a.href = download.downloadUrl; a.download = download.filename;
+      a.target = "_blank"; a.rel = "noopener";
+      document.body.appendChild(a); a.click(); a.remove();
+      setMessage("PDF 다운로드를 시작했어요. 브라우저 다운로드 목록을 확인해 주세요.");
+      void reload().catch(() => {});
+    } catch (e) { setMessage(""); setDetailError(e instanceof Error && e.name === "TimeoutError" ? "PDF 생성 시간이 초과됐어요. 원고 미리보기에서 PDF로 저장해 주세요." : e instanceof Error ? e.message : "PDF를 만들지 못했어요."); }
     finally { setBusy(false); }
   };
   return <main className="admin-shell"><div className="admin-container">
