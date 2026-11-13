@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -31,51 +31,7 @@ function Line({ text }: { text: string }) {
 }
 
 export default function StoryScroll() {
-  const [mobilePage, setMobilePage] = useState(-1);
   const root = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = root.current;
-    if (!el) return;
-    let gesture: { x: number; y: number; delta: number; captured: boolean } | null = null;
-    const start = (event: TouchEvent) => {
-      if (!matchMedia("(max-width:768px)").matches || event.touches.length !== 1 || (event.target as HTMLElement).closest("button")) return;
-      const box = el.getBoundingClientRect();
-      if (box.top > window.innerHeight * .25 || box.bottom < window.innerHeight * .5) return;
-      gesture = { x:event.touches[0].clientX, y:event.touches[0].clientY, delta:0, captured:false };
-    };
-    const move = (event: TouchEvent) => {
-      if (!gesture || event.touches.length !== 1) return;
-      const dy = gesture.y - event.touches[0].clientY;
-      const dx = gesture.x - event.touches[0].clientX;
-      if (!gesture.captured && Math.abs(dx) > Math.abs(dy)) return;
-      const canAdvance = dy > 0 && mobilePage < STORY.length - 1;
-      const canGoBack = dy < 0 && mobilePage >= 0;
-      if (gesture.captured || canAdvance || canGoBack) {
-        if (event.cancelable) event.preventDefault();
-        gesture.captured = true;
-        gesture.delta = dy;
-      }
-    };
-    const end = () => {
-      if (gesture?.captured && Math.abs(gesture.delta) >= 35) {
-        const direction = gesture.delta > 0 ? 1 : -1;
-        setMobilePage(page => Math.max(-1, Math.min(STORY.length - 1, page + direction)));
-      }
-      gesture = null;
-    };
-    const cancel = () => { gesture = null; };
-    el.addEventListener("touchstart", start, { passive:true });
-    el.addEventListener("touchmove", move, { passive:false });
-    el.addEventListener("touchend", end);
-    el.addEventListener("touchcancel", cancel);
-    return () => {
-      el.removeEventListener("touchstart", start);
-      el.removeEventListener("touchmove", move);
-      el.removeEventListener("touchend", end);
-      el.removeEventListener("touchcancel", cancel);
-    };
-  }, [mobilePage]);
 
   useEffect(() => {
     const el = root.current;
@@ -83,7 +39,7 @@ export default function StoryScroll() {
     gsap.registerPlugin(ScrollTrigger);
     const mm = gsap.matchMedia();
 
-    mm.add("(min-width: 769px) and (prefers-reduced-motion: no-preference)", () => {
+    mm.add("(prefers-reduced-motion: no-preference)", () => {
       const paras = gsap.utils.toArray<HTMLElement>(".story-scroll__para", el);
       const sign = el.querySelector(".story__sign");
       const heading = gsap.utils.toArray<HTMLElement>(".story-scroll__inner > .eyebrow, .story-scroll__inner > .headline", el);
@@ -92,6 +48,11 @@ export default function StoryScroll() {
       gsap.set(sign, { autoAlpha: 0 });
       gsap.set(heading, { autoAlpha: 1, y: 0 });
 
+      const mobile = matchMedia("(max-width:768px)").matches;
+      const stops: number[] = [0];
+      let lower = 0;
+      let upper = 1;
+      let limiting = false;
       const tl = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
@@ -102,6 +63,16 @@ export default function StoryScroll() {
           scrub: 0.6,
           anticipatePin: 1,
           invalidateOnRefresh: true,
+          onUpdate: self => {
+            if (!mobile || limiting || !self.isActive) return;
+            const bounded = Math.max(lower, Math.min(upper, self.progress));
+            if (Math.abs(bounded - self.progress) > .0001) {
+              limiting = true;
+              self.scroll(self.start + bounded * (self.end - self.start));
+              self.update();
+              limiting = false;
+            }
+          },
         },
       });
 
@@ -109,6 +80,7 @@ export default function StoryScroll() {
       tl.to(heading, { autoAlpha: 0, y: -14, duration: 0.65 });
       paras.forEach((p, i) => {
         tl.to(p, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1 });
+        stops.push(tl.duration() + .4);
         tl.to({}, { duration: 0.8 }); // 읽는 시간
         // 마지막 문단은 남겨 둔다
         if (i < paras.length - 1) tl.to(p, { autoAlpha: 0, y: -30, filter: "blur(6px)", duration: 0.8 });
@@ -116,7 +88,20 @@ export default function StoryScroll() {
       // 마지막 문단과 함께 서명이 나타난다
       tl.to(sign, { autoAlpha: 1, duration: 0.8 }, "-=0.8");
 
-      return () => el.classList.remove("is-pinned");
+      const progressStops = [...stops.map(time => time / tl.duration()), 1];
+      upper = progressStops[1];
+      const beginGesture = () => {
+        const trigger = tl.scrollTrigger;
+        if (!trigger) return;
+        const progress = trigger.progress;
+        lower = [...progressStops].reverse().find(stop => stop < progress - .002) ?? 0;
+        upper = progressStops.find(stop => stop > progress + .002) ?? 1;
+      };
+      if (mobile) window.addEventListener("touchstart", beginGesture, { passive:true });
+      return () => {
+        window.removeEventListener("touchstart", beginGesture);
+        el.classList.remove("is-pinned");
+      };
     });
 
     return () => mm.revert();
@@ -124,18 +109,6 @@ export default function StoryScroll() {
 
   return (
     <div className="story-scroll" ref={root}>
-      <div className="story-mobile">
-        {mobilePage < 0 && <><p className="eyebrow">p.02</p><h2 className="headline">오모이레터를 만든 이유</h2></>}
-        <div className="story-mobile__letter">
-          <span aria-live="polite">{mobilePage < 0 ? "위로 스크롤해 이야기를 읽어 보세요." : STORY[mobilePage].map((line, i) => <span key={`${mobilePage}-${i}`}><Line text={line} />{i < STORY[mobilePage].length - 1 && <br />}</span>)}</span>
-        </div>
-        <div className="story-mobile__controls">
-          {mobilePage >= 0 && <button type="button" onClick={() => setMobilePage((page) => page - 1)}>← 이전</button>}
-          <span>{mobilePage < 0 ? "" : `${mobilePage + 1} / ${STORY.length}`}</span>
-          {mobilePage >= 0 && mobilePage < STORY.length - 1 && <button type="button" onClick={() => setMobilePage((page) => Math.min(page + 1, STORY.length - 1))}>다음 →</button>}
-          {mobilePage === STORY.length - 1 && <span>아래로 스크롤해 주세요</span>}
-        </div>
-      </div>
       <div className="story-scroll__inner">
         <p className="eyebrow">p.02</p>
         <h2 className="headline">오모이레터를 만든 이유</h2>

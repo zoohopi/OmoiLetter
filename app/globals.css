@@ -2384,17 +2384,6 @@ body {
 
 .wordmark small { margin-top:42px; }
 
-.story-mobile { display:none }
-@media(max-width:768px) {
-  .story-scroll > .story-scroll__inner { display:none }
-  .story-mobile { display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; min-height:70svh; width:100% }
-  .story-mobile__letter { display:flex; align-items:center; justify-content:center; width:100%; min-height:260px; padding:30px 12px; border:0; background:transparent; color:inherit; font:inherit; font-size:clamp(21px,5.5vw,28px); line-height:1.9; cursor:pointer; touch-action:pan-y }
-  .story-mobile__letter:disabled { opacity:1; cursor:default }
-  .story-mobile__controls { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:22px; min-height:44px; font-size:12px }
-  .story-mobile__controls button { min-height:44px; border:0; background:transparent; color:inherit; font:inherit; cursor:pointer }
-  .story-mobile button:focus-visible { outline:2px solid #4067A0; outline-offset:4px }
-}
-
 @media(max-width:859px) {
   #p07 .route { gap:0 }
   #p07 .route__item:not(:last-child) { padding-bottom:64px }
