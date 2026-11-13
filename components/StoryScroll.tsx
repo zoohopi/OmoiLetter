@@ -37,6 +37,49 @@ export default function StoryScroll() {
   useEffect(() => {
     const el = root.current;
     if (!el) return;
+    let gesture: { x: number; y: number; delta: number; captured: boolean } | null = null;
+    const start = (event: TouchEvent) => {
+      if (!matchMedia("(max-width:768px)").matches || event.touches.length !== 1 || (event.target as HTMLElement).closest("button")) return;
+      const box = el.getBoundingClientRect();
+      if (box.top > window.innerHeight * .25 || box.bottom < window.innerHeight * .5) return;
+      gesture = { x:event.touches[0].clientX, y:event.touches[0].clientY, delta:0, captured:false };
+    };
+    const move = (event: TouchEvent) => {
+      if (!gesture || event.touches.length !== 1) return;
+      const dy = gesture.y - event.touches[0].clientY;
+      const dx = gesture.x - event.touches[0].clientX;
+      if (!gesture.captured && Math.abs(dx) > Math.abs(dy)) return;
+      const canAdvance = dy > 0 && mobilePage < STORY.length - 1;
+      const canGoBack = dy < 0 && mobilePage >= 0;
+      if (gesture.captured || canAdvance || canGoBack) {
+        if (event.cancelable) event.preventDefault();
+        gesture.captured = true;
+        gesture.delta = dy;
+      }
+    };
+    const end = () => {
+      if (gesture?.captured && Math.abs(gesture.delta) >= 35) {
+        const direction = gesture.delta > 0 ? 1 : -1;
+        setMobilePage(page => Math.max(-1, Math.min(STORY.length - 1, page + direction)));
+      }
+      gesture = null;
+    };
+    const cancel = () => { gesture = null; };
+    el.addEventListener("touchstart", start, { passive:true });
+    el.addEventListener("touchmove", move, { passive:false });
+    el.addEventListener("touchend", end);
+    el.addEventListener("touchcancel", cancel);
+    return () => {
+      el.removeEventListener("touchstart", start);
+      el.removeEventListener("touchmove", move);
+      el.removeEventListener("touchend", end);
+      el.removeEventListener("touchcancel", cancel);
+    };
+  }, [mobilePage]);
+
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
     gsap.registerPlugin(ScrollTrigger);
     const mm = gsap.matchMedia();
 
@@ -83,9 +126,9 @@ export default function StoryScroll() {
     <div className="story-scroll" ref={root}>
       <div className="story-mobile">
         {mobilePage < 0 && <><p className="eyebrow">p.02</p><h2 className="headline">오모이레터를 만든 이유</h2></>}
-        <button type="button" className="story-mobile__letter" onClick={() => setMobilePage((page) => Math.min(page + 1, STORY.length - 1))} disabled={mobilePage === STORY.length - 1} aria-label={mobilePage < 0 ? "터치해서 이야기 읽기" : "다음 편지 내용 읽기"}>
-          <span aria-live="polite">{mobilePage < 0 ? "터치해서 이야기를 읽어 보세요." : STORY[mobilePage].map((line, i) => <span key={`${mobilePage}-${i}`}><Line text={line} />{i < STORY[mobilePage].length - 1 && <br />}</span>)}</span>
-        </button>
+        <div className="story-mobile__letter">
+          <span aria-live="polite">{mobilePage < 0 ? "위로 스크롤해 이야기를 읽어 보세요." : STORY[mobilePage].map((line, i) => <span key={`${mobilePage}-${i}`}><Line text={line} />{i < STORY[mobilePage].length - 1 && <br />}</span>)}</span>
+        </div>
         <div className="story-mobile__controls">
           {mobilePage >= 0 && <button type="button" onClick={() => setMobilePage((page) => page - 1)}>← 이전</button>}
           <span>{mobilePage < 0 ? "" : `${mobilePage + 1} / ${STORY.length}`}</span>

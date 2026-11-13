@@ -162,13 +162,26 @@ function targets(book: HTMLElement | null) {
 
 // el 안 글에서 n번째 줄(줄바꿈 기준)이 그려진 자리
 function lineRect(el: HTMLElement, n: number) {
-  const node = el.firstChild;
-  if (!node || node.nodeType !== Node.TEXT_NODE) return el.getBoundingClientRect();
-  const lines = (node.textContent ?? "").split("\n");
-  const start = lines.slice(0, n).reduce((sum, l) => sum + l.length + 1, 0);
+  // Template headings can contain several text nodes, not just one plain string.
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const nodes: Text[] = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+  const text = nodes.map(node => node.data).join("");
+  const lines = text.split("\n");
+  const start = lines.slice(0, n).reduce((sum, line) => sum + line.length + 1, 0);
+  const length = lines[n]?.length ?? 0;
+  if (!length) return el.getBoundingClientRect();
+  const locate = (offset: number): [Text, number] => {
+    for (const node of nodes) {
+      if (offset <= node.length) return [node, offset];
+      offset -= node.length;
+    }
+    const last = nodes[nodes.length - 1];
+    return [last, last.length];
+  };
   const range = document.createRange();
-  range.setStart(node, start);
-  range.setEnd(node, start + (lines[n]?.length ?? 0));
+  range.setStart(...locate(start));
+  range.setEnd(...locate(start + length));
   return range.getClientRects()[0] ?? range.getBoundingClientRect();
 }
 
@@ -189,7 +202,7 @@ function fly(letter: HTMLElement | null, book: HTMLElement | null) {
     for (let node: HTMLElement | null = src; node; node = node.parentElement) {
       zoom *= Number.parseFloat(getComputedStyle(node).zoom) || 1;
     }
-    const scale = to.height / from.height;
+    const scale = Math.min(to.height / from.height, to.width / from.width);
     src.style.transformOrigin = `${(from.left - box.left) / zoom}px ${(from.top - box.top) / zoom}px`;
     src.style.transform = `translate(${(to.left - from.left) / zoom}px, ${(to.top - from.top) / zoom}px) scale(${scale})`;
   });
