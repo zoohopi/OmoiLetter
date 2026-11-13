@@ -12,8 +12,8 @@ export const orderSchema = z.object({ bookId: z.uuid(), addressId: z.uuid() });
 const transform = z.object({ scale: z.number().finite().positive().max(20), x: z.number().finite(), y: z.number().finite() });
 export const draftSchema = z.object({
   version: z.literal(1), status: z.enum(["draft", "submitted"]),
-  step: z.enum(["order", "photos", "interview", "preview"]), interviewIndex: z.number().int().nonnegative(),
-  occasion: z.literal("lover-birthday"), recipientName: z.string().max(100), anniversaryDate: z.string().max(10),
+  step: z.enum(["order", "photos", "interview", "letters", "preview"]), interviewIndex: z.number().int().nonnegative(),
+  coverTitle: z.string().max(100).optional(), occasion: z.literal("lover-birthday"), recipientName: z.string().max(100), anniversaryDate: z.string().max(10),
   lateAccepted: z.boolean(), bookSize: z.enum(["4x5", "8x8"]), design: z.enum(["minimal", "magazine"]).optional(),
   answers: z.record(z.string(), z.string().max(10000)), photoByQuestion: z.record(z.string(), z.string()),
   coverPhotoId: z.string().nullable(), createdAt: z.string(), updatedAt: z.string(), submittedAt: z.string().optional(),

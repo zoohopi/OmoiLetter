@@ -67,14 +67,14 @@ export default function Home() {
           <div className="inner">
             <div className="hook__lines" aria-label="미안해. 사랑해. 고마워.">
               <Reveal as="p" className="hook__line">미안해.</Reveal>
-              <Reveal as="p" className="hook__line" delay={900}>사랑해.</Reveal>
-              <Reveal as="p" className="hook__line" delay={1800}>고마워.</Reveal>
+              <Reveal as="p" className="hook__line" delay={650}>사랑해.</Reveal>
+              <Reveal as="p" className="hook__line" delay={1300}>고마워.</Reveal>
             </div>
-            <Reveal as="p" className="hook__question" delay={2800}>
+            <Reveal as="p" className="hook__question" delay={2050}>
               늘 마음속에 있는 말인데, 왜 이렇게 꺼내기 어려울까요.
             </Reveal>
 
-            <Reveal className="hook__brand" delay={3700}>
+            <Reveal className="hook__brand" delay={2800}>
               <h1 className="wordmark">
                 Omoi Letter
                 <small>(想い Letter)</small>
@@ -84,7 +84,7 @@ export default function Home() {
             </Reveal>
 
             <p className="scroll-cue">
-              첫 장을 넘겨 보세요
+
               <span />
             </p>
           </div>
@@ -115,7 +115,7 @@ export default function Home() {
               <p className="eyebrow">p.05</p>
               <h2 className="headline">빈 편지지 앞에서는 누구나 막힙니다.</h2>
               <p className="lead">
-                다양한 인터뷰 질문을 통해
+                인터뷰 질문을 통해
                 <br />
                 전하고 싶은 속마음을 이끌어 드릴게요.
               </p>
@@ -223,3 +223,6 @@ export default function Home() {
     </>
   );
 }
+
+
+

@@ -10,7 +10,7 @@ export type DesignId = "minimal" | "magazine"; // 우표는 추후 작업 (06. D
 export type LayoutId = "landscape" | "portrait" | "portrait2" | "square";
 
 export type Rect = [number, number, number, number];
-type Font = "serif" | "sans" | "arial" | "pre";
+type Font = "serif" | "sans" | "arial" | "pre" | "hand";
 
 export type TextStyle = {
   font: Font;
@@ -67,21 +67,20 @@ const minimal: Design = {
     bg: MP,
     els: [
       { t: "photo", r: [36, 60, 562, 412] },
-      { t: "text", r: [36, 449, 286, 511], text: "말하지 못한 마음을,\n한 권의 편지로.", s: mSerif(11, 21) },
-      { t: "text", r: [303.02, 444, 563.02, 484], text: "想い", s: mSerif(24, 32, { align: "right" }) },
+      { t: "text", r: [36, 444, 286, 506], text: "{coverTitle}", s: mSerif(11, 21) },
+      { t: "text", r: [303.02, 440, 563.02, 480], text: "想い", s: mSerif(19.2, 32, { align: "right" }) },
       { t: "text", r: [440.02, 479, 560.02, 504], text: "OMOI LETTER", s: mArial(12, 14.4, { align: "right" }) },
-      { t: "text", r: [36, 543, 256, 563], text: "A LETTER FOR YOU", s: mArial(7, 12.6) },
+      { t: "text", r: [36, 543, 286, 563], text: "To. {name}", s: mArial(7, 12.6) },
       { t: "text", r: [350.02, 543, 560.02, 565], text: "{date}", s: mArial(8, 14.4, { align: "right" }) },
     ],
   },
   back: {
     bg: MP,
     els: [
-      { t: "rect", r: [280, 415, 318, 453], stroke: MV, sw: 0.5, round: true },
-      { t: "text", r: [149.06, 428.47, 449.06, 450.47], text: "想い", s: mSerif(11, 16, { align: "center" }) },
-      { t: "text", r: [149, 465, 449, 483], text: "OMOI LETTER", s: mArial(8, 12, { align: "center" }) },
-      { t: "text", r: [149, 487, 449, 521], text: "누군가를 생각하는 마음을 인터뷰하고,\n편지로 전합니다.", s: mSerif(7.5, 12, { align: "center" }) },
-      { t: "text", r: [149, 528, 449, 544], text: "A LETTER FOR YOU", s: mArial(6, 10, { align: "center" }) },
+      { t: "text", r: [149.05511811023626, 451.41569504602603, 449.05511811023626, 473.41569504602603], text: "想い", s: mSerif(11.0, 16.0, { align: "center" }) },
+      { t: "text", r: [149.0, 492.0, 449.0, 510.0], text: "OMOI LETTER", s: mArial(9.5, 12.0, { align: "center", font: "hand" }) },
+      { t: "text", r: [149.05511811023626, 507.0, 449.05511811023626, 541.0], text: "마음을 인터뷰하고, 편지로 전합니다.", s: mSerif(7.5, 12.0, { align: "center" }) },
+      { t: "text", r: [149.0, 536.0, 449.0, 552.0], text: "A LETTER FOR YOU", s: mArial(6.0, 10.0, { align: "center" }) },
     ],
   },
   layouts: [
@@ -142,8 +141,8 @@ const magazine: Design = {
     els: [
       { t: "photo", r: [0, 0, 398, PAGE_PT] },
       { t: "text", r: [422, 44, 582, 144], text: "OMOI\nLetter", s: gSerif(29, 32) },
-      { t: "text", r: [422, 180, 572, 290], text: "A LETTER FOR YOU\n\n말하지 못한 마음을,\n한 권의 편지로.", s: gSerif(9, 17) },
-      { t: "text", r: [422, 505, 572, 535], text: "TO. {name}", s: gSerif(10, 16) },
+      { t: "text", r: [422, 180, 572, 290], text: "A LETTER FOR YOU\n말하지 못한 마음을,\n한 권의 편지로.", s: gSerif(9, 17) },
+      { t: "text", r: [422, 505, 572, 535], text: "To. {name}", s: gSerif(10, 16) },
       { t: "text", r: [422, 535, 572, 555], text: "{date}", s: gArial(8, 12.8, { track: 80 }) },
     ],
   },
@@ -261,6 +260,23 @@ for (const design of [minimal, magazine]) {
   if (portrait2) portrait2.label = "풀페이지";
 }
 
+// Both cover templates use evening purple ink.
+for (const design of [minimal, magazine]) {
+  design.cover.els = design.cover.els.map((element): El =>
+    element.t === "text"
+      ? { ...element, s: { ...element.s, color: "#695974" } }
+      : element,
+  );
+}
+// Share the DesignCraft minimal back cover across both book styles.
+magazine.back = {
+  bg: minimal.back.bg,
+  els: minimal.back.els.map((element): El =>
+    element.t === "text"
+      ? { ...element, r: [...element.r] as Rect, s: { ...element.s } }
+      : { ...element, r: [...element.r] as Rect },
+  ),
+};
 export const DESIGNS: Record<DesignId, Design> = { minimal, magazine };
 export const DESIGN_LIST: Design[] = [minimal, magazine];
 export const DEFAULT_DESIGN: DesignId = "minimal";
@@ -295,4 +311,19 @@ export function photoPageDesign(designId: DesignId | undefined, layoutId: Layout
   const stationery = magazine.layouts.find((l) => l.id === "portrait")!.left;
   return { bg: design.cover.bg, els: stationery.els.map((el): El => el.t === "text" ? { ...el, text: el.text.replace(/\{(?:il|ir|pl|pr)\}/g, "{no}") } : el) };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

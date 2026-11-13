@@ -72,7 +72,7 @@ export default function PhotosPage() {
       <PhotoPages draft={draft} index={selectedPage} onSelect={setSelectedPage} />
       <div className="actions photos-step__next">
         <button className="btn" disabled={busy || !draft.bookPhotos || draft.bookPhotos.length < 9 || draft.bookPhotos.length > 19 || draft.bookPhotos.some((p) => !p.photoId)}
-          onClick={() => { updateDraft(() => ({ step: "interview", editorStage: "letters" })); router.push("/letter/interview"); }}>사진 편집 완료 · 편지 쓰기 →</button>
+          onClick={() => { updateDraft(() => ({ step: "interview", editorStage: "letters" })); router.push("/letter/interview"); }}>사진 편집 완료 · 인터뷰하기 →</button>
       </div>
     </>}
   </div></main>;

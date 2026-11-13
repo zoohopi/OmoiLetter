@@ -11,7 +11,7 @@ import ScaledPage from "@/components/letter/ScaledPage";
 import { createDraft, discardDraft, putPhoto, updateDraft, useDraft } from "@/lib/letter/store";
 import { newId, prepareImage } from "@/lib/letter/image";
 import { BOOK_LABEL, isPastDeadline, nightsUntil, todayString } from "@/lib/letter/rules";
-import { coverShowsName, DESIGN_LIST, designOf } from "@/lib/letter/designs";
+import { DESIGN_LIST, designOf } from "@/lib/letter/designs";
 import "../letter/maker.css";
 
 // 시작 = 표지 만들기. 책(8×8)을 바로 보여주고, 표지 위에서 사진·이름·기념일을 바로 넣는다.
@@ -74,7 +74,7 @@ export default function StartPage() {
   const past = hasDate && nights >= 0 && isPastDeadline(draft.anniversaryDate);
   const todo = [
     { done: Boolean(draft.coverPhotoId), text: "사진을 눌러 표지 사진을 정해 주세요." },
-    { done: Boolean(draft.recipientName.trim()), text: "받는 분의 이름 또는 애칭을 적어 주세요." },
+    { done: true, text: "원하시는 제목이 있다면 수정해주세요." },
     { done: hasDate && nights >= 0, text: "기념일은 언제인가요? 날짜를 눌러 골라 주세요." },
   ];
   const ready = todo.every((t) => t.done) && (!past || draft.lateAccepted);
@@ -108,10 +108,11 @@ export default function StartPage() {
                 design={draft.design}
                 size="8x8"
                 recipientName={draft.recipientName}
-                anniversaryDate={draft.anniversaryDate}
+                coverTitle={draft.coverTitle} anniversaryDate={draft.anniversaryDate}
                 {...photoEditorProps(draft, "cover", photoMode, setPhotoMode)}
                 coverEdit={{
                   onPhoto: (f) => void onPhoto(f),
+                  onTitle: (v) => updateDraft(() => ({ coverTitle: v })),
                   onName: (v) => updateDraft(() => ({ recipientName: v })),
                   onDate: (v) => updateDraft(() => ({ anniversaryDate: v, lateAccepted: false })),
                   minDate: todayString(),
@@ -130,19 +131,7 @@ export default function StartPage() {
               </li>
             ))}
           </ul>
-          {/* 표지에 이름 자리가 없는 디자인(미니멀)은 받는 분을 여기서 받는다 */}
-          {!coverShowsName(draft.design) && (
-            <label className="field">
-              <span className="field__label">받는 분</span>
-              <input
-                className="input"
-                value={draft.recipientName}
-                maxLength={12}
-                placeholder="이름 또는 애칭"
-                onChange={(e) => updateDraft(() => ({ recipientName: e.target.value }))}
-              />
-            </label>
-          )}
+
           {error && <p className="ph-error">{error}</p>}
 
 

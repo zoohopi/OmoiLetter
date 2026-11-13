@@ -7,7 +7,6 @@ import BookPage, { type PageSpec } from "@/components/letter/BookPage";
 import ScaledPage from "@/components/letter/ScaledPage";
 import { SAMPLE_DATE, SAMPLE_DESIGN, SAMPLE_NAME, SAMPLE_PAGES } from "@/lib/letter/sample";
 
-const LABELS = ["표지", "펼침 1 · 가로", "펼침 2 · 세로 1", "펼침 3 · 세로 2"];
 
 // 넘기는 장 [앞면, 뒷면] — SAMPLE_PAGES 번호. 앞면은 오른쪽 면, 넘기면 뒷면이 다음 펼침의 왼쪽 면이 된다.
 const SHEETS: [number, number | null][] = [
@@ -104,9 +103,7 @@ export default function BookPreview() {
         </div>
       </div>
       <p className="book__scroll-hint">스크롤해서 편지를 펼쳐 보세요</p>
-      <p className="book__label">
-        {LABELS[page]} · 샘플 이미지
-      </p>
+
     </div>
   );
 }
@@ -118,3 +115,5 @@ export function SamplePage({ page }: { page: PageSpec }) {
     </ScaledPage>
   );
 }
+
+

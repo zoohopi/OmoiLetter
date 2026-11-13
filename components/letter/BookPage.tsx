@@ -63,6 +63,7 @@ type Props = {
   design?: DesignId;
   size: BookSize;
   bleed?: boolean;
+  coverTitle?: string;
   recipientName: string;
   anniversaryDate: string;
   /** 표지를 책 위에서 바로 고칠 때 (시작 화면) */
@@ -83,6 +84,7 @@ export type CoverEdit = {
   onAdjustPhoto?: () => void;
   onPhotoTransform?: (value: PhotoTransform) => void;
   onPhoto: (file: File) => void;
+  onTitle?: (value: string) => void;
   onName: (value: string) => void;
   onDate: (value: string) => void;
   minDate: string;
@@ -91,6 +93,7 @@ export type CoverEdit = {
 
 type Ctx = {
   bleedPt: number;
+  coverTitle?: string;
   name: string;
   date: string;
   no: number;
@@ -107,7 +110,7 @@ type Ctx = {
   textEdit?: Props["textEdit"];
 };
 
-export default function BookPage({ page, design: designId, size, bleed = false, recipientName, anniversaryDate, coverEdit, photoUrls, coverPhotoTransform, photoTransform, photoFrame, photoAdjust, photoEdit, textEdit }: Props) {
+export default function BookPage({ page, design: designId, size, bleed = false, coverTitle, recipientName, anniversaryDate, coverEdit, photoUrls, coverPhotoTransform, photoTransform, photoFrame, photoAdjust, photoEdit, textEdit }: Props) {
   const design = designOf(designId);
   const pd =
     page.kind === "cover" ? design.cover : page.kind === "back" ? design.back : page.photoPage ? photoPageDesign(designId, page.layout, Boolean(page.answer.trim())) : layoutOf(design, page.layout)[page.side];
@@ -123,6 +126,7 @@ export default function BookPage({ page, design: designId, size, bleed = false, 
   const ctx: Ctx = {
     bleedPt: bleed ? BLEED_MM * PAGE_PT / trimOf(size).w : 0,
     photoUrls,
+    coverTitle,
     name: recipientName,
     date: anniversaryDate,
     no: page.kind === "leaf" ? page.no : 0,
@@ -162,6 +166,7 @@ function box(r: Rect): CSSProperties {
 }
 
 const FONTS = {
+  hand: "var(--font-title), cursive",
   serif: "var(--font-serif), serif",
   sans: "var(--font-sans-kr), sans-serif",
   arial: "Arial, Helvetica, sans-serif",
@@ -199,6 +204,7 @@ function leadOf(answer: string) {
 function fill(text: string, ctx: Ctx) {
   const two = String(ctx.no).padStart(2, "0");
   return text
+    .replaceAll("{coverTitle}", ctx.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로.")
     .replaceAll("{name}", ctx.name || "○○")
     .replaceAll("{dateDot}", formatDate(ctx.date, "."))
     .replaceAll("{date}", formatDate(ctx.date, ". "))
@@ -363,6 +369,16 @@ function PhotoSlot({ r, ctx }: { r: Rect; ctx: Ctx }) {
 // 표지 위에서 이름·날짜를 바로 고친다. {name} {date} 자리에 입력칸이 들어간다.
 function CoverText({ text, ctx }: { text: string; ctx: Ctx }) {
   const edit = ctx.coverEdit!;
+  const [editingTitle, setEditingTitle] = useState(false);
+  if (text === "{coverTitle}") {
+    return editingTitle ? <textarea autoFocus aria-label="표지 제목" maxLength={100} value={ctx.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로."} onChange={(e) => edit.onTitle?.(e.target.value)} onBlur={() => setEditingTitle(false)} style={{ width: "100%", height: "100%", font: "inherit", color: "inherit", background: "transparent", border: "1px solid #4067a0", resize: "none" }} /> : <span className="cover-title-edit" onDoubleClick={() => setEditingTitle(true)}>
+      <span>{fill(text, ctx)}</span>
+      <button className="cover-title-edit__hint" type="button" onClick={() => setEditingTitle(true)} aria-label="표지 제목 수정">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z" /></svg>
+        더블클릭하여 제목 수정
+      </button>
+    </span>;
+  }
   const parts = text.split(/(\{name\}|\{date\}|\{dateDot\})/);
   return (
     <>
@@ -374,9 +390,9 @@ function CoverText({ text, ctx }: { text: string; ctx: Ctx }) {
               className="tp-edit tp-edit--name"
               value={ctx.name}
               maxLength={12}
-              placeholder="이름 또는 애칭"
+              placeholder="받으시는 분 성함"
               onChange={(e) => edit.onName(e.target.value)}
-              aria-label="받는 분의 이름 또는 애칭"
+              aria-label="받으시는 분 성함"
             />
           );
         if (part === "{date}" || part === "{dateDot}")
@@ -438,7 +454,7 @@ function AnswerSlot({ el, ctx }: { el: Extract<El, { t: "answer" }>; ctx: Ctx })
       {ctx.textEdit ? (
         <textarea
           className="tp-answer__input"
-          style={textCss(el.s)}
+          style={{ ...textCss(el.s), textAlign: "justify", textAlignLast: "left", textJustify: "inter-character" }}
           value={ctx.answer}
           maxLength={ctx.textEdit.maxLength}
           placeholder={ctx.textEdit.placeholder}
@@ -446,10 +462,12 @@ function AnswerSlot({ el, ctx }: { el: Extract<El, { t: "answer" }>; ctx: Ctx })
           onChange={(e) => ctx.textEdit!.onChange(e.target.value)}
         />
       ) : (
-        <div ref={body} className="tp-answer__body" style={{ ...textCss(el.s), ...columns }}>
+        <div ref={body} className="tp-answer__body" style={{ ...textCss(el.s), ...columns, textAlign: "justify", textAlignLast: "left", textJustify: "inter-character" }}>
           {ctx.answer}
         </div>
       )}
     </div>
   );
 }
+
+

@@ -17,6 +17,7 @@ import type { Draft } from "@/lib/letter/types";
 export default function PreviewPage() {
   const draft = useDraftGuard();
   const router = useRouter();
+  const [editingPage, setEditingPage] = useState<string | null>(null);
   if (!draft) return null;
 
   const inner = buildInnerPages(draft);
@@ -40,7 +41,7 @@ export default function PreviewPage() {
         <div className="pv-list">
           <div className="pv-cover">
             <p className="pv-label">표지</p>
-            <Page draft={draft} page={{ kind: "cover", photoId: draft.coverPhotoId }} />
+            <Page draft={draft} page={{ kind: "cover", photoId: draft.coverPhotoId }} editing={editingPage === "cover"} setEditing={(on) => setEditingPage(on ? "cover" : null)} />
           </div>
 
           {spreads.map((pages, i) => (
@@ -48,7 +49,7 @@ export default function PreviewPage() {
               <p className="pv-label">펼침 {i + 1}</p>
               <div className={`pv-spread ${pages.length === 1 ? "pv-spread--single" : ""}`}>
                 {pages.map((p, j) => (
-                  <Page key={j} draft={draft} page={p} />
+                  <Page key={j} draft={draft} page={p} editing={editingPage === `inner-${i}-${j}`} setEditing={(on) => setEditingPage(on ? `inner-${i}-${j}` : null)} />
                 ))}
               </div>
             </div>
@@ -56,7 +57,7 @@ export default function PreviewPage() {
 
           <div className="pv-cover">
             <p className="pv-label">뒷표지</p>
-            <Page draft={draft} page={{ kind: "back", photoId: draft.coverPhotoId }} />
+            <Page draft={draft} page={{ kind: "back", photoId: draft.coverPhotoId }} editing={editingPage === "back"} setEditing={(on) => setEditingPage(on ? "back" : null)} />
           </div>
         </div>
 
@@ -71,7 +72,7 @@ export default function PreviewPage() {
           </div>
         )}
 
-        <div className="actions">
+        <div className="actions preview-actions">
           <Link className="link-btn" href="/letter/interview">
             ← 편지 고치기
           </Link>
@@ -79,7 +80,7 @@ export default function PreviewPage() {
             인스타그램용 사진 받기
           </Link>
           <button
-            className="btn"
+            className="btn btn--small preview-actions__finish"
             type="button"
             disabled={problems.length > 0}
             onClick={() => {
@@ -97,8 +98,7 @@ export default function PreviewPage() {
 }
 
 // 두 번 누르면 그 쪽만 고치는 상태가 된다. 표지·사진·글만 고칠 수 있다.
-function Page({ draft, page }: { draft: Draft; page: PageSpec }) {
-  const [editing, setEditing] = useState(false);
+function Page({ draft, page, editing, setEditing }: { draft: Draft; page: PageSpec; editing: boolean; setEditing: (on: boolean) => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const leaf = page.kind === "leaf" && page.qid ? page : null;
@@ -123,7 +123,7 @@ function Page({ draft, page }: { draft: Draft; page: PageSpec }) {
   return (
     <div
       className={`pv-page ${editable ? "is-editable" : ""} ${on ? "is-editing" : ""}`}
-      onDoubleClick={() => editable && setEditing(true)}
+      onDoubleClickCapture={() => editable && setEditing(true)}
       title={editable && !on ? "두 번 눌러 고치기" : undefined}
     >
       <ScaledPage>
@@ -133,11 +133,12 @@ function Page({ draft, page }: { draft: Draft; page: PageSpec }) {
           design={draft.design}
           size={draft.bookSize}
           recipientName={draft.recipientName}
-          anniversaryDate={draft.anniversaryDate}
+          coverTitle={draft.coverTitle} anniversaryDate={draft.anniversaryDate}
           coverEdit={
             on && page.kind === "cover"
               ? {
                   onPhoto: (f) => void runPhoto(() => setCoverPhoto(f)),
+                  onTitle: (v) => updateDraft(() => ({ coverTitle: v })),
                   onName: (v) => updateDraft(() => ({ recipientName: v })),
                   onDate: (v) => v && updateDraft(() => ({ anniversaryDate: v, lateAccepted: false })),
                   minDate: todayString(),
@@ -167,9 +168,7 @@ function Page({ draft, page }: { draft: Draft; page: PageSpec }) {
       {on && (
         <div className="pv-edit-bar">
           <span>{leaf ? (photoSide ? "사진을 눌러 바꾸고, 레이아웃도 골라요" : "글을 바로 고쳐요") : "사진·이름·날짜를 바로 고쳐요"}</span>
-          <button className="btn btn--small" type="button" onClick={() => setEditing(false)}>
-            완료
-          </button>
+
         </div>
       )}
       {error && <p className="ph-error">{error}</p>}

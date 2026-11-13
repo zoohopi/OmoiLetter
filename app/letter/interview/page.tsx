@@ -2,7 +2,7 @@
 
 import { createPortal } from "react-dom";
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useDraftGuard } from "@/lib/letter/guard";
 import { updateDraft } from "@/lib/letter/store";
 import { newId } from "@/lib/letter/image";
@@ -11,16 +11,19 @@ import useLetterDrag from "@/lib/letter/useLetterDrag";
 import BookPage from "@/components/letter/BookPage";
 import ScaledPage from "@/components/letter/ScaledPage";
 import PhotoPages from "@/components/letter/PhotoPages";
-import QuestionShelf from "@/components/letter/QuestionShelf";
+
+import AIInterview from "@/components/letter/AIInterview";
 import LetterComposer from "@/components/letter/LetterComposer";
 
 export default function WritePage() {
   const draft = useDraftGuard({ requireCover: true });
   const router = useRouter();
+  const isPlacement = usePathname() === "/letter/letters";
   const busy = false;
   const cardPress=useRef<{id:string;x:number;y:number}|null>(null);
   const suppressOpen=useRef(0);
   const [activeLetterId, setActiveLetterId] = useState<string | null>(null);
+  const [aiQuestion, setAiQuestion] = useState<string | null>(null);
   const [cursor, setCursor] = useState(0);
   const [placementMessage,setPlacementMessage]=useState("");
   const drag=useLetterDrag((letterId,pageId)=>placeLetter(letterId,pageId));
@@ -62,18 +65,15 @@ export default function WritePage() {
   const ready = validCount && letters.some((l) => l.question.trim() && l.answer.trim() && photos.some((p) => p.id === l.pageId));
 
   return <main className="maker maker--compose letter-stage"><div className="maker__inner maker__inner--wide">
-    <p className="eyebrow">STEP 3 · 편지</p>
-    <h1 className="maker__title">편지로 마음을 전해요</h1>
-    <p className="maker__lead">질문을 돌려 보며, 지금 마음에 닿는 편지지를 골라 주세요.</p>
+    <p className="eyebrow">{isPlacement ? "STEP 4 · 편지" : "STEP 3 · 인터뷰"}</p>
+    <h1 className="maker__title">{isPlacement ? "편지로 마음을 전해요" : "인터뷰로 마음을 꺼내요"}</h1>
+    <p className="maker__lead">{isPlacement ? "작성한 편지를 원하는 페이지에 넣어 주세요." : "인터뷰를 통해 전하고 싶은 마음을 천천히 풀어보세요."}</p>
     {legacy && photos.length > 0 && <p className="compose-note">이전에 넣은 사진과 답변을 불러왔어요. 이어서 편집할 수 있어요.</p>}
 
-    <QuestionShelf onPick={addLetter} />
-    <div className="self-question">
-      <button className="btn" type="button" onClick={() => addLetter("")}>나에게 스스로 질문하기 +</button>
-      <p>마음속에 있는 다른 질문이 있다면 직접 적어 보세요.</p>
-    </div>
+    {!isPlacement && <div className="actions" style={{ justifyContent: "center" }}><button className="btn" type="button" onClick={() => setAiQuestion("전하고 싶은 마음")}>인터뷰하기</button></div>}
 
-    {letters.length > 0 && <section className="chosen-letters" aria-label="뽑아 둔 편지지">
+
+    {isPlacement && letters.length > 0 && <section className="chosen-letters" aria-label="뽑아 둔 편지지">
       <h2>뽑아 둔 편지지 <span>{letters.length}</span></h2>
       <p className="letter-drop-help">작성한 편지지를 아래 원하는 페이지로 끌어다 놓아 주세요.</p>
       <div className="letter-placement-work">
@@ -119,13 +119,25 @@ export default function WritePage() {
       </div>
     </section>}
     {drag.ghost && createPortal(<div className="letter-drag-ghost letter-drag-ghost--cute" style={{left:drag.ghost.x+12,top:drag.ghost.y-30}}><span>“</span>{letters.find(l=>l.id===drag.ghost?.id)?.question}</div>,document.body)}
+    {aiQuestion && <AIInterview question={aiQuestion} onSelfQuestion={() => { setAiQuestion(null); addLetter(""); }} onClose={() => setAiQuestion(null)} onSave={(answer) => {
+      const id = newId();
+      save((d) => ({ letters: [...d.letters!, { id, question: aiQuestion, answer, pageId: null }], step: "letters" }));
+      setAiQuestion(null);
+      router.push("/letter/letters");
+    }} />}
     {activeLetter && <LetterComposer key={activeLetter.id} letter={activeLetter}
       change={(patch) => save((d) => ({ letters: d.letters!.map((l) => l.id === activeLetter.id ? { ...l, ...patch } : l) }))}
       close={closeLetter} />}
-    <div className="actions"><span>사진 {photos.length}장 · 편지 {letters.length}편 · 자동 저장</span>
-      <button className="btn" disabled={!ready || busy} onClick={() => { save(() => ({ step: "preview" })); router.push("/letter/preview"); }}>편지책 전체 미리보기 →</button>
+    <div className="actions" style={{ justifyContent: "center" }}>
+      <button className={isPlacement ? "btn" : "interview-next-link"} disabled={busy || (isPlacement ? !ready : !letters.some((letter) => letter.answer.trim()))} onClick={() => {
+        save(() => ({ step: isPlacement ? "preview" : "letters" }));
+        router.push(isPlacement ? "/letter/preview" : "/letter/letters");
+      }}>{isPlacement ? "편지책 전체 미리보기 →" : "인터뷰 완료 · 편지 배치하기 →"}</button>
 
     </div>
-    {!ready && <p className="compose-note">편지를 작성한 뒤 원하는 페이지에 끌어다 놓아 주세요.</p>}
+    {isPlacement && !ready && <p className="compose-note">편지를 작성한 뒤 원하는 페이지에 끌어다 놓아 주세요.</p>}
   </div></main>;
 }
+
+
+

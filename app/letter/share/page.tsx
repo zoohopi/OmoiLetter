@@ -75,7 +75,7 @@ export default function SharePage() {
         <p className="eyebrow">INSTAGRAM</p>
         <h1 className="maker__title">인스타그램에 올릴 사진</h1>
         <p className="maker__lead">
-          표지와 사진을 실물 책처럼 담았어요. 편지 내용은 보여 주지 않아요. · 4:5 (1080 × 1350px)
+          표지와 사진을 실물 책처럼 담았어요. 편지 내용은 보여 주지 않아요.
         </p>
 
         <div className="actions" style={{ justifyContent: "flex-start" }}>

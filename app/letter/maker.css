@@ -847,7 +847,7 @@
 .photo-page.is-selected .scaled { outline:4px solid #4067a0; outline-offset:3px; box-shadow:0 0 0 7px rgba(64,103,160,.28),0 16px 36px rgba(40,40,80,.3); }
 .photo-page__select { display:block; margin:14px auto 0; font-size:13px; padding:4px 14px; border-radius:16px; }
 .photo-page__select[aria-pressed="true"] { font-weight:700; text-decoration:underline; text-underline-offset:4px; }
-.photo-page-list__controls { margin-top:18px; }
+.photo-page-list__controls { margin-top:36px; }
 .photo-page-list__controls .compose-controls { justify-content:center; }
 .photos-step__next { justify-content:center; margin-top:36px; }
 @media(min-width:721px) { .compose-work > .compose-panel { position:sticky; top:116px; } }
@@ -1125,3 +1125,269 @@
   background-size: auto, 235px 235px;
   background-blend-mode: normal;
 }
+
+.cover-title-edit {
+  display: block;
+  position: relative;
+  cursor: text;
+  border-bottom: 1px dashed #69597460;
+  padding-bottom: calc(var(--pt) * 4);
+}
+.cover-title-edit__hint {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pt) * 4);
+  border: 0;
+  padding: calc(var(--pt) * 5) 0 0;
+  background: transparent;
+  color: #695974;
+  font: 400 calc(var(--pt) * 8)/1.4 var(--font-body), sans-serif;
+  cursor: pointer;
+}
+.cover-title-edit__hint svg {
+  width: calc(var(--pt) * 10);
+  height: calc(var(--pt) * 10);
+}
+.cover-title-edit__hint:focus-visible { outline: 1px solid #4067a0; outline-offset: 2px; }
+
+/* Quiet book-page stationery inspired by the supplied uncoated-paper reference. */
+.question-paper__face {
+  padding: 44px 30px 58px;
+  justify-content: center;
+  background-color: #f6f5f0;
+  background-image: linear-gradient(105deg, #ffffffb8, #f6f5f0c9 55%, #e8e5dec9),
+    url('/textures/postcard-cotton.webp');
+  background-size: auto, 280px 280px;
+  border: 1px solid #dedbd3;
+  border-radius: 1px;
+  box-shadow: inset 3px 0 7px #ffffff80, inset -1px 0 2px #8a81751a,
+    3px 4px 0 -1px #e7e4dc, 5px 7px 0 -2px #d7d3ca,
+    0 22px 30px -20px #29251f80;
+}
+.question-paper__question {
+  max-width: 205px;
+  margin: 0;
+  font-family: var(--font-serif), serif;
+  font-size: clamp(16px, 4.3vw, 20px);
+  font-weight: 400;
+  line-height: 1.85;
+  letter-spacing: .035em;
+  color: #4067a0;
+  text-align: center;
+  text-wrap: balance;
+}
+.question-paper__face[data-long-question="true"] .question-paper__question {
+  font-size: clamp(15px, 4vw, 18px);
+  line-height: 1.7;
+}
+.question-paper__footer,
+.question-paper.is-front .question-paper__footer {
+  bottom: 27px;
+  left: 24px;
+  right: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #4067a0;
+  font: 400 9px/1.5 var(--font-body), sans-serif;
+  letter-spacing: .07em;
+  opacity: .75;
+}
+.question-paper__edge {
+  background: repeating-linear-gradient(0deg, #d8d4ca 0 1px, #f3f1eb 1px 3px);
+  border-color: #dedbd3;
+}
+@media(max-width:600px) {
+  .question-paper__face { padding: 38px 24px 54px; }
+}
+
+.ai-interview { width:min(600px,calc(100vw - 32px)); max-height:85svh; box-sizing:border-box; overflow-y:auto; padding:28px; border:1px solid #69597433; border-radius:12px; background:#fffdf9; color:#695974; font:14px/1.7 var(--font-body),sans-serif; }
+.ai-interview::backdrop { background:#29233280; backdrop-filter:blur(5px); }
+.ai-interview header,.ai-interview__actions { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.ai-interview h2 { font:28px var(--font-title),serif; margin:0; }
+.ai-interview label { display:block; margin:16px 0; }
+.ai-interview textarea { display:block; width:100%; min-height:120px; box-sizing:border-box; margin-top:10px; padding:12px; border:1px solid #69597444; border-radius:6px; background:#fff; color:#51405e; font:16px/1.8 var(--font-body),sans-serif; resize:vertical; }
+.ai-interview button { cursor:pointer; }
+.ai-interview button:disabled { opacity:.5; cursor:wait; }
+.ai-interview__topic { font:22px/1.6 var(--font-title),serif; }
+.ai-interview__notice { font-size:12px; opacity:.75; }
+.ai-interview__turn { padding:8px 16px; margin:18px 0; background:#4067a008; border-left:2px solid #4067a044; white-space:pre-wrap; }
+.ai-interview__turn p:first-child { color:#4067a0; }
+.ai-interview fieldset { border:1px solid #69597433; margin:20px 0; }
+
+/* Keep all five production steps on one row, including narrow phones. */
+.mk-steps {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+}
+.mk-steps li { min-width: 0; }
+.mk-steps a,
+.mk-steps span {
+  padding-top: 5px;
+  border-top-width: 2px;
+  font-size: 11px;
+  text-align: center;
+  white-space: nowrap;
+}
+@media (max-width: 380px) {
+  .mk-steps { gap: 4px; }
+  .mk-steps a,
+  .mk-steps span { font-size: 10px; }
+}
+
+.ai-interview .ai-interview__header { justify-content: flex-end; }
+.ai-interview__close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #69597466;
+  border-radius: 50%;
+  background: transparent;
+  color: #695974;
+  font: 24px/1 Arial, sans-serif;
+}
+.ai-interview__heading {
+  display: block;
+  margin-bottom: 18px;
+  font: 400 28px/1.45 var(--font-title), serif;
+}
+.ai-interview__start-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ai-interview__start-actions .btn { padding: 12px 16px; font-size: 14px; }
+.ai-interview__start-actions .account-text-link { font-size: 12px; text-align: right; }
+@media(max-width:400px) {
+  .ai-interview__start-actions { gap: 8px; }
+  .ai-interview__start-actions .btn { padding: 10px; font-size: 12px; }
+  .ai-interview__start-actions .account-text-link { font-size: 11px; }
+}
+
+.interview-next-link {
+  border: 0;
+  border-radius: 0;
+  padding: 10px 0;
+  background: transparent;
+  color: #695974;
+  font: 400 14px/1.6 var(--font-body), sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+}
+.interview-next-link:disabled { opacity: .4; cursor: default; }
+.interview-next-link:focus-visible { outline: 2px solid #4067a0; outline-offset: 5px; }
+
+.ai-interview .ai-interview__header {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ai-interview__header h2 {
+  flex: 1;
+  min-width: 0;
+  font: 400 28px/1.45 var(--font-title), serif;
+}
+.ai-interview__close { flex-shrink: 0; }
+.interview-next-link {
+  color: #fff;
+  font-family: var(--font-title), cursive;
+  font-size: 22px;
+  text-decoration: underline;
+  text-underline-offset: 7px;
+  text-decoration-thickness: 1px;
+}
+
+.ai-review { margin-top: 24px; }
+.ai-review > p { margin-bottom: 16px; }
+.ai-review .ai-interview__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 10px;
+}
+.ai-review .ai-interview__actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 10px 15px;
+  border: 1px solid #69597430;
+  border-radius: 8px;
+  background: transparent;
+  color: #695974;
+  font: 400 13px/1.4 var(--font-body), sans-serif;
+  transition: background .18s ease, border-color .18s ease;
+}
+.ai-review .ai-interview__actions .ai-review__more {
+  background: #4067a009;
+  border-color: #4067a040;
+  color: #4067a0;
+}
+.ai-review__finish {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 50px;
+  margin-top: 22px;
+  padding: 13px 18px;
+  border: 1px solid #695974;
+  border-radius: 9px;
+  background: #695974;
+  color: #fff6e7;
+  font: 500 14px/1.5 var(--font-body), sans-serif;
+  transition: background .18s ease;
+}
+.ai-review__finish span { font-size: 20px; font-weight: 400; }
+@media(hover:hover) {
+  .ai-review .ai-interview__actions button:hover:enabled { background: #6959740c; border-color: #69597470; }
+  .ai-review__finish:hover:enabled { background: #594963; }
+}
+.ai-review button:focus-visible { outline: 2px solid #4067a0; outline-offset: 3px; }
+@media(prefers-reduced-motion:reduce) {
+  .ai-review button { transition: none; }
+}
+
+.ai-interview__turn textarea[readonly] {
+  min-height: 80px;
+  padding: 0;
+  margin-bottom: 12px;
+  border: 0;
+  background: transparent;
+  resize: none;
+}
+.ai-interview__edit-answer {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  margin: 12px 0;
+  padding: 8px 12px;
+  border: 1px solid #4067a033;
+  border-radius: 6px;
+  background: #fffdf9;
+  color: #4067a0;
+  font: 400 13px/1.5 var(--font-body), sans-serif;
+}
+
+/* Keep the selected leaf above its facing page and photo overlays. */
+.photo-page.is-selected, .pv-page.is-editing { position:relative; z-index:10; isolation:isolate; }
+.photo-page.is-selected .scaled, .pv-page.is-editing .scaled { outline:3px solid #ed913f; outline-offset:3px; box-shadow:0 0 0 6px rgba(237,145,63,.22); }
+.photo-page.is-selected .photo-page__select { background:#ed913f; color:#fff; }
+
+/* Space between the book leaf and its layout buttons, including preview editing. */
+.pv-page > .layout-pick { margin-top:36px; }
+.photo-page-list__controls { margin-top:36px; padding-top:0; }
+.photo-page-list__controls > .layout-pick { margin-top:0; }
+
+.pv-edit-bar { justify-content:center; text-align:center; margin-top:14px; }
+
+.preview-actions { display:flex; flex-direction:column; align-items:center; text-align:center; }
+.preview-actions .preview-actions__finish { width:auto; padding:10px 20px; font-size:14px; min-height:40px; }

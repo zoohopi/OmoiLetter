@@ -11,8 +11,9 @@ import type { Step } from "@/lib/letter/types";
 const STEPS: { step: Step; label: string; href: string }[] = [
   { step: "order", label: "1 표지", href: "/start" },
   { step: "photos", label: "2 사진", href: "/letter/photos" },
-  { step: "interview", label: "3 편지", href: "/letter/interview" },
-  { step: "preview", label: "4 미리보기", href: "/letter/preview" },
+  { step: "interview", label: "3 인터뷰", href: "/letter/interview" },
+  { step: "letters", label: "4 편지", href: "/letter/letters" },
+  { step: "preview", label: "5 미리보기", href: "/letter/preview" },
 ];
 
 // 20초 단위 시계. 서버 렌더링(미리 그리기) 때는 0 — 현재 시각을 고정해 버리지 않도록.

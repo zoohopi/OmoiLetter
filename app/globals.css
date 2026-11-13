@@ -1617,7 +1617,7 @@ button {
 .hook__line.reveal,
 .hook__question.reveal,
 .hook__brand.reveal {
-  transition-duration: 1.6s;
+  transition-duration: 1.2s;
 }
 
 .scroll-cue {
@@ -2303,3 +2303,54 @@ body {
   #p03.is-interviewing .try__letter.is-shown .try__quote,
   #p03.is-interviewing .try__letter.is-shown .try__q { transition-delay: 0s; }
 }
+
+
+/* Bring the initial interview action halfway closer to its introduction. */
+#p03 .try--sample:has(.try__start) { margin-top: 16px; }
+#p03 .try__start { top: 25%; }
+
+/* Keep the example caption directly under the initial interview button. */
+#p03 .try--sample:has(.try__start) { position: relative; }
+#p03 .try--sample:has(.try__start) > .preview__note {
+  position: absolute;
+  top: calc(25% + 64px);
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  text-align: center;
+}
+
+
+
+/* Equal spacing above and below the initial interview action. */
+#p03:not(.is-interviewing) .lead { margin-bottom: 0; }
+#p03 .try--sample:has(.try__start) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 42px;
+  margin-top: 42px;
+}
+#p03 .try__stage:has(.try__start) {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+#p03 .try__stage:has(.try__start) .try__book,
+#p03 .try__letter:has(.try__start) > .try__quote,
+#p03 .try__letter:has(.try__start) > .try__q,
+#p03 .try__letter:has(.try__start) > .try__aw { display: none; }
+#p03 .try__letter:has(.try__start) {
+  width: 100%;
+  padding: 0;
+}
+#p03 .try__start {
+  position: static;
+  transform: none;
+}
+#p03 .try__start:hover { transform: translateY(-2px); }
+#p03 .try--sample:has(.try__start) > .preview__note {
+  position: static;
+  margin: 0;
+}
+

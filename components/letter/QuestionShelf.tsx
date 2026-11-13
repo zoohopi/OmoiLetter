@@ -15,7 +15,6 @@ export default function QuestionShelf({ onPick }: { onPick: (question: string) =
         <feColorMatrix type="matrix" values="0 0 0 0 0.25098 0 0 0 0 0.403922 0 0 0 0 0.627451 1.2756 4.2912 0.4332 0 -3" />
       </filter>
     </defs></svg>
-    <p className="question-shelf__intro">마음에 닿는 질문을 한 장 뽑아 보세요.</p>
     <div className="question-shelf__stage" tabIndex={0} aria-label="질문 편지지 탐색. 좌우 방향키 또는 옆으로 밀어서 넘기기"
       onKeyDown={(e) => { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); turn(e.key === "ArrowLeft" ? -1 : 1); } }}
       onPointerDown={(e) => { pointer.current = { x: e.clientX, y: e.clientY }; }}
@@ -41,7 +40,6 @@ export default function QuestionShelf({ onPick }: { onPick: (question: string) =
           onClick={() => { if(Date.now()<suppressClick.current)return; if(isActive)onPick(q.text);else setActive(i); }}>
           <span className="question-paper__edge" aria-hidden="true" />
           <span className="question-paper__face" data-long-question={q.text.length > 28}>
-            <span className="question-paper__meta question-paper__logo-oval"><span className="question-paper__logo-mark" role="img" aria-label="Omoi Letter 메인 로고 · FROM · TO · Unspoken feelings, bound into a book of letters." /></span>
             <span className="question-paper__question">{q.text}</span>
             <span className="question-paper__footer">{isActive ? "이 편지지 뽑기 ↗" : "마음을 담는 질문"}</span>
           </span>
@@ -56,4 +54,6 @@ export default function QuestionShelf({ onPick }: { onPick: (question: string) =
 
   </section>;
 }
+
+
 

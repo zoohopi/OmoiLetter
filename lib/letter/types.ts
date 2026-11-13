@@ -5,7 +5,7 @@ import type { DesignId, LayoutId } from "./designs";
 // 크기는 8×8 한 가지 (211 × 211mm). "4x5"는 잠시 쓰던 값 — 같은 8×8로 그린다.
 export type BookSize = "4x5" | "8x8";
 
-export type Step = "order" | "interview" | "photos" | "preview";
+export type Step = "order" | "interview" | "photos" | "letters" | "preview";
 
 export type PhotoTransform = { scale: number; x: number; y: number };
 
@@ -33,6 +33,7 @@ export type Draft = {
   photoByQuestion: Record<string, string>; // 질문 id → 사진 id
   design?: DesignId; // 책 디자인 (없으면 미니멀). lib/letter/designs.ts
   photoLayout?: Record<string, LayoutId>; // 질문 id → 펼침 레이아웃 (없으면 세로)
+  coverTitle?: string;
   coverPhotoId: string | null; // 시작 화면에서 따로 고른 표지 사진
   createdAt: string;
   updatedAt: string;

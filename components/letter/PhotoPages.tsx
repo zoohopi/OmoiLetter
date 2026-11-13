@@ -26,7 +26,8 @@ export default function PhotoPages({ draft, index, onSelect, editable = true, pl
           const n = row * 2 + offset;
           const id = page.kind === "leaf" ? page.qid ?? "" : "";
           return <div key={id} className={`photo-page ${n === selected ? "is-selected" : ""} ${dropPageId === id ? "is-drop-target" : ""}`} data-page-index={n} data-letter-drop-id={onPlaceLetter ? id : undefined}
-            onPointerDown={() => onSelect(n)}
+            onPointerDownCapture={() => onSelect(n)}
+            onDoubleClickCapture={() => { onSelect(n); if (editable) setEditingId(id); }}
             onClick={() => { if(placingLetterId && onPlaceLetter)onPlaceLetter(placingLetterId,id); }}
             onDragOver={(e) => { if(!onPlaceLetter || !e.dataTransfer.types.includes("application/x-omoi-letter"))return;e.preventDefault();e.dataTransfer.dropEffect="move";onDropHover?.(id); }}
             onDragLeave={(e) => { if(!(e.relatedTarget instanceof Node) || !e.currentTarget.contains(e.relatedTarget))onDropHover?.(null); }}

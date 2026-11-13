@@ -138,7 +138,7 @@ export default function TryQuestion() {
           )}
         </div>
       </div>
-      <p className="preview__note">예시 · 쓴 그대로 편지지에 옮겨져요.</p>
+      <p className="preview__note">쓴 그대로 편지에 옮겨져요.</p>
     </div>
   );
 }
@@ -189,4 +189,5 @@ function fly(letter: HTMLElement | null, book: HTMLElement | null) {
     src.style.transform = `translate(${to.left - from.left}px, ${to.top - from.top}px) scale(${scale})`;
   });
 }
+
 

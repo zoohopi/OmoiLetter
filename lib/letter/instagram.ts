@@ -4,13 +4,11 @@
 import { getPhoto } from "./store";
 import { bookContent } from "./bookContent";
 import type { Draft, PhotoTransform } from "./types";
-import { designOf, PAGE_PT, type PageDesign, type TextStyle, type Rect } from "./designs";
+import { designOf, photoPageDesign, PAGE_PT, type PageDesign, type TextStyle } from "./designs";
 
 export const IG_W = 1080;
 export const IG_H = 1350;
 export type Slide = { name: string; blob: Blob };
-type Point = [number, number];
-type Vertex = { p: Point; uv: Point };
 const SIZE = 1400;
 
 function canvas(w: number, h: number) {
@@ -18,7 +16,7 @@ function canvas(w: number, h: number) {
   return c;
 }
 function family(s: TextStyle) {
-  const vars = { serif: "--font-serif", sans: "--font-sans-kr", pre: "--font-body", arial: "" };
+  const vars = { hand: "--font-title", serif: "--font-serif", sans: "--font-sans-kr", pre: "--font-body", arial: "" };
   return vars[s.font] ? getComputedStyle(document.documentElement).getPropertyValue(vars[s.font]).trim() || "serif" : "Arial";
 }
 async function bitmap(url: string) {
@@ -32,7 +30,7 @@ async function pageTexture(pd: PageDesign, draft: Draft, photoId: string, transf
   if (!blob) throw new Error(no ? "내지 사진을 다시 넣어 주세요." : "표지 사진을 다시 넣어 주세요.");
   const photo = await createImageBitmap(blob);
   ctx.scale(SIZE / PAGE_PT, SIZE / PAGE_PT);
-  ctx.fillStyle = pd.bg; ctx.fillRect(0, 0, PAGE_PT, PAGE_PT);
+  // Transparent print layer: the photographic mockup provides the paper.
   try {
     for (const el of pd.els) {
       const [x, y, right, bottom] = el.r, w = right - x, h = bottom - y;
@@ -51,7 +49,7 @@ async function pageTexture(pd: PageDesign, draft: Draft, photoId: string, transf
         ctx.globalAlpha = el.opacity ?? 1; ctx.drawImage(image, x, y, w, h); image.close();
       } else if (el.t === "text") {
         // Only public design text; questions, quotes from answers and letter copy never enter the export.
-        const text = el.text.replaceAll("{name}", draft.recipientName || "○○")
+        const text = el.text.replaceAll("{coverTitle}", draft.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로.").replaceAll("{name}", draft.recipientName || "○○")
           .replaceAll("{dateDot}", draft.anniversaryDate.replaceAll("-", "."))
           .replaceAll("{date}", draft.anniversaryDate.replaceAll("-", ". "))
           .replace(/\{(?:no|il|ir|pl|pr)\}/g, String(no).padStart(2, "0"))
@@ -80,52 +78,71 @@ async function pageTexture(pd: PageDesign, draft: Draft, photoId: string, transf
   return c;
 }
 
-function composite(base: ImageBitmap, mesh: Vertex[][], texture: HTMLCanvasElement, patches: Rect[]) {
-  const c = canvas(IG_W, IG_H), ctx = c.getContext("2d")!;
-  ctx.drawImage(base, 0, 0);
-  const corner = (u: number, v: number) => mesh.flat().find(p => Math.abs(p.uv[0] - u) < .0001 && Math.abs(p.uv[1] - v) < .0001)!.p;
-  // Orthographic camera: one affine projection avoids seams between small mesh triangles.
-  const a = corner(0, 1), b = corner(1, 1), d = corner(0, 0);
-  ctx.setTransform((b[0] - a[0]) / SIZE, (b[1] - a[1]) / SIZE,
-    (d[0] - a[0]) / SIZE, (d[1] - a[1]) / SIZE, a[0], a[1]);
-  // Replace only the photo and personal fields. All other pixels come from
-  // the exact p.07 artwork, paper, camera, floor and studio lights.
-  ctx.globalCompositeOperation = "multiply";
-  for (const [x, y, right, bottom] of patches) {
-    const k = SIZE / PAGE_PT;
-    ctx.drawImage(texture, x * k, y * k, (right - x) * k, (bottom - y) * k,
-      x * k, y * k, (right - x) * k, (bottom - y) * k);
-  }
-  ctx.globalCompositeOperation = "source-over";
-  // Brighten only the book face; keep the studio background unchanged.
-  ctx.save();
-  ctx.beginPath(); ctx.rect(0, 0, SIZE, SIZE); ctx.clip();
-  ctx.resetTransform();
-  ctx.filter = "brightness(1.06)";
-  ctx.drawImage(c, 0, 0);
-  ctx.restore();
-  return new Promise<Blob>((resolve, reject) => c.toBlob(b => b ? resolve(b) : reject(new Error("이미지 저장 실패")), "image/jpeg", .95));
+async function frontComposite(texture: HTMLCanvasElement): Promise<Blob> {
+  const base = await bitmap("/sample/book-renders/share/reference-blank-v1.png");
+  try {
+    const c = canvas(IG_W, IG_H), ctx = c.getContext("2d")!;
+    // Source photograph coordinates are normalized; only book height changes
+    // to fit the square product. Preserve the original floor and cover pixels.
+    const top = base.height * (291 / 1402);
+    const bottom = base.height * (1100 / 1402);
+    const targetTop = 280, bookHeight = 734;
+    ctx.drawImage(base, 0, 0, base.width, top, 0, 0, IG_W, targetTop);
+    ctx.drawImage(base, 0, top, base.width, bottom - top, 0, targetTop, IG_W, bookHeight);
+    ctx.drawImage(base, 0, bottom, base.width, base.height - bottom,
+      0, targetTop + bookHeight, IG_W, IG_H - targetTop - bookHeight);
+    // Only the customer's ink and photos are added; no recreated shadows or paper.
+    const faceLeft = IG_W * (207 / 1122);
+    const faceWidth = IG_W * ((940 - 207) / 1122);
+    // Derive neutral paper grain from the actual photographed cover. A local
+    // luminance residual carries fibres without its colour or lighting cast.
+    const printed = canvas(SIZE, SIZE), ink = printed.getContext("2d")!;
+    ink.drawImage(texture, 0, 0);
+    const material = canvas(SIZE, SIZE), paper = material.getContext("2d")!;
+    paper.drawImage(c, faceLeft, targetTop + 2, faceWidth, bookHeight - 4, 0, 0, SIZE, SIZE);
+    const softened = canvas(SIZE, SIZE), soft = softened.getContext("2d")!;
+    soft.filter = "blur(3px)"; soft.drawImage(material, 0, 0);
+    const surface = paper.getImageData(0, 0, SIZE, SIZE).data;
+    const smooth = soft.getImageData(0, 0, SIZE, SIZE).data;
+    const pixels = ink.getImageData(0, 0, SIZE, SIZE);
+    const grain = new Float32Array(SIZE * SIZE);
+    let sum = 0, count = 0;
+    for (let n = 0; n < grain.length; n++) {
+      const i = n * 4;
+      const detail = ((surface[i] - smooth[i]) * .2126 +
+        (surface[i + 1] - smooth[i + 1]) * .7152 +
+        (surface[i + 2] - smooth[i + 2]) * .0722);
+      grain[n] = Math.max(-2.5, Math.min(2.5, detail * .7));
+      if (pixels.data[i + 3]) { sum += grain[n]; count++; }
+    }
+    const mean = count ? sum / count : 0;
+    for (let n = 0; n < grain.length; n++) {
+      const i = n * 4;
+      if (!pixels.data[i + 3]) continue;
+      // Identical neutral variation on RGB preserves hue and average exposure.
+      const variation = grain[n] - mean;
+      for (let ch = 0; ch < 3; ch++) pixels.data[i + ch] += variation;
+    }
+    ink.putImageData(pixels, 0, 0);
+    ctx.drawImage(printed, faceLeft, targetTop + 2, faceWidth, bookHeight - 4);
+    return await new Promise<Blob>((resolve, reject) => c.toBlob(b => b ? resolve(b) : reject(new Error("이미지 저장 실패")), "image/jpeg", .95));
+  } finally { base.close(); }
 }
 
 export async function renderInstagramSlides(draft: Draft): Promise<Slide[]> {
   if (!draft.coverPhotoId) throw new Error("표지 사진을 먼저 넣어 주세요.");
   const design = designOf(draft.design);
-  const root = `/sample/book-renders/share/${design.id}`;
-  const [base, response] = await Promise.all([bitmap(`${root}-p07.webp`), fetch(`${root}-p07.json`)]);
-  try {
-    if (!response.ok) throw new Error("목업을 불러오지 못했어요.");
-    const mesh: Vertex[][] = await response.json();
+  {
     await document.fonts.ready;
-    const patches = design.cover.els.filter(el => el.t === "photo" ||
-      (el.t === "text" && /\{(?:name|date|dateDot)\}/.test(el.text))).map(el => el.r);
     // Cover is always first and cannot be omitted, including photo-only drafts.
-    const cover = await pageTexture(design.cover, draft, draft.coverPhotoId, draft.coverPhotoTransform);
-    const slides: Slide[] = [{ name: "omoi-letter-01-cover.jpg", blob: await composite(base, mesh, cover, patches) }];
+    const cover = await pageTexture({ ...design.cover, bg: "#FFFFFF" }, draft, draft.coverPhotoId, draft.coverPhotoTransform);
+    const slides: Slide[] = [{ name: "omoi-letter-01-cover.jpg", blob: await frontComposite(cover) }];
     for (const [i, page] of bookContent(draft).filter(p => p.photoId).entries()) {
-      const pd = design.cover;
-      const texture = await pageTexture(pd, draft, page.photoId!, draft.photoTransforms?.[page.id], i + 1);
-      slides.push({ name: `omoi-letter-${String(i + 2).padStart(2, "0")}.jpg`, blob: await composite(base, mesh, texture, patches) });
+      const pd = photoPageDesign(draft.design, draft.photoLayout?.[page.id], false);
+      const texture = await pageTexture({ ...pd, bg: "#FFFFFF" }, draft, page.photoId!, draft.photoTransforms?.[page.id], i + 1);
+      slides.push({ name: `omoi-letter-${String(i + 2).padStart(2, "0")}.jpg`, blob: await frontComposite(texture) });
     }
     return slides;
-  } finally { base.close(); }
+  }
 }
+
