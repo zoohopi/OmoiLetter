@@ -106,7 +106,11 @@ export default function WritePage() {
             </div>
             <div className="chosen-letter__bottom-row">
               <span className="chosen-letter__status">{letter.pageId?`${photos.findIndex(p=>p.id===letter.pageId)+1}쪽에 배치됨`:complete?"아직 배치 전":"이어서 작성하기"}</span>
-              <button type="button" className="chosen-letter__remove" aria-label={`편지 ${i+1} 삭제`} onClick={()=>save(d=>({letters:d.letters!.filter(l=>l.id!==letter.id)}))}>삭제</button>
+              {letter.pageId && <button type="button" className="chosen-letter__remove" aria-label={`편지 ${i+1} 페이지 배치 해제`} title="편지를 빼고 사진 페이지로 되돌리기" onClick={() => {
+                save(d => ({ letters:d.letters!.map(item => item.id === letter.id ? {...item,pageId:null} : item) }));
+                drag.setPlacingId(null); drag.setHoverId(null);
+                setPlacementMessage("편지를 페이지에서 뺐어요. 작성한 편지는 보관하고, 페이지에는 사진만 보여요.");
+              }}>삭제</button>}
             </div>
           </article>;
         })}</div></aside>
@@ -119,9 +123,8 @@ export default function WritePage() {
       </div>
     </section>}
     {drag.ghost && createPortal(<div className="letter-drag-ghost letter-drag-ghost--cute" style={{left:drag.ghost.x+12,top:drag.ghost.y-30}}><span>“</span>{letters.find(l=>l.id===drag.ghost?.id)?.question}</div>,document.body)}
-    {aiQuestion && <AIInterview initialProgress={draft.interviewProgress} question={aiQuestion} onSelfQuestion={() => { setAiQuestion(null); addLetter(""); }} onClose={() => setAiQuestion(null)} onSave={(answer) => {
-      const id = newId();
-      save((d) => ({ letters: [...d.letters!, { id, question: aiQuestion, answer, pageId: null }], step: "letters", interviewProgress: undefined }));
+    {aiQuestion && <AIInterview initialProgress={draft.interviewProgress} question={aiQuestion} onSelfQuestion={() => { setAiQuestion(null); addLetter(""); }} onClose={() => setAiQuestion(null)} onSave={(pages) => {
+      save((d) => ({ letters: [...d.letters!, ...pages.map(page => ({ id:newId(), question:page.question, answer:page.answer, pageId:null }))], step: "letters", interviewProgress: undefined }));
       setAiQuestion(null);
       router.push("/letter/letters");
     }} />}

@@ -12,6 +12,7 @@ export const orderSchema = z.object({ bookId: z.uuid(), addressId: z.uuid() });
 const transform = z.object({ scale: z.number().finite().positive().max(20), x: z.number().finite(), y: z.number().finite() });
 export const draftSchema = z.object({
   interviewProgress: z.object({
+    introExamples:z.array(z.string().max(300)).max(2).optional(),
     question:z.string().max(200), relationship:z.string().max(200),
     turns:z.array(z.object({question:z.string().max(300),answer:z.string().max(1500)})).max(8),
     choices:z.array(z.string().max(300)).max(3), previousQuestions:z.array(z.string().max(300)).max(24),

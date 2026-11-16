@@ -2,8 +2,9 @@ import "server-only";
 import { chromium } from "playwright";
 import { cookies } from "next/headers";
 import { AdminError } from "./access";
+import { orderPdfRanges } from "./pdf-parts";
 
-export const PDF_TEMPLATE_VERSION = 2;
+export const PDF_TEMPLATE_VERSION = 3;
 const running = new Set<string>();
 export async function renderOrderPdf(orderId: string) {
   let stage = "브라우저 실행";
@@ -45,9 +46,21 @@ export async function renderOrderPdf(orderId: string) {
     const pageCount = Number(await page.locator(".admin-print-book").getAttribute("data-page-count"));
     if (!Number.isInteger(pageCount) || pageCount < 3 || pageCount > 100) throw new AdminError("PDF 페이지 구성을 확인해 주세요.", 500);
     stage = "PDF 파일 생성";
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const buffer = await Promise.race([page.pdf({ preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false, margin: { top: 0, right: 0, bottom: 0, left: 0 } }), new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("PDF render timeout")), 45000); })]).finally(() => clearTimeout(timer));
-    return { buffer, pageCount };
+    const ranges = orderPdfRanges(pageCount);
+    const createPdf = async (pageRanges?: string) => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      return Promise.race([
+        page.pdf({ preferCSSPageSize:true, printBackground:true, displayHeaderFooter:false, pageRanges, margin:{top:0,right:0,bottom:0,left:0} }),
+        new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("PDF render timeout")), 45000); }),
+      ]).finally(() => clearTimeout(timer));
+    };
+    const buffer = await createPdf();
+    stage = "표지 PDF 생성";
+    const coverBuffer = await createPdf(ranges.cover);
+    stage = "속지 PDF 생성";
+    const interiorBuffer = await createPdf(ranges.interior);
+    return { buffer, coverBuffer, interiorBuffer, pageCount };
+
   } catch (error) {
     if (error instanceof AdminError) throw error;
     console.error("admin_pdf_failed", { stage, name: error instanceof Error ? error.name : "Error" });

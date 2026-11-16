@@ -42,6 +42,7 @@ export type Draft = {
 };
 
 export type InterviewProgress = {
+  introExamples?: string[];
   question: string; relationship: string; turns: { question:string; answer:string }[];
   choices:string[]; previousQuestions:string[]; current:string; answer:string; from:string;
   polished:string|null; stage:"interview"|"review"|"options"|"final"|"relationship";

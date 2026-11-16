@@ -2390,3 +2390,6 @@ body {
   #p07 .route__item:not(:last-child)::before { display:block; content:""; left:50%; right:auto; top:auto; bottom:0; width:2px; height:46px; border:0; background:rgba(255,246,231,.7); transform:translateX(-50%); }
   #p07 .route__item:last-child::before { display:none }
 }
+
+.share-description-space { display:none }
+@media(min-width:769px) { .share-description-break { display:none } .share-description-space { display:inline } }

@@ -134,7 +134,7 @@ export default function Home() {
                 책으로 주문 전에<br />사진으로 먼저 만나보세요
               </h2>
               <p className="lead">
-                실제 책으로 구매전 인스타그램 공유용을<br />무료로 전달드려요.
+                실제 책으로 구매전 인스타그램 공유용을<span className="share-description-break"><br /></span><span className="share-description-space"> </span>무료로 전달드려요.
                 <br />
                 <strong>편지는 담지 않고, 표지와 사진만 보여줘요.</strong>
               </p>
