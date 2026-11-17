@@ -14,8 +14,9 @@ export default function PrintBook({ draft, photoUrls }: { draft: Draft; photoUrl
       await document.fonts.ready;
       await Promise.all([...document.querySelectorAll<HTMLImageElement>(".admin-print-book img")].map(image => image.decode()));
       await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      if (document.querySelector('[data-letter-overflow="true"]')) throw new Error("편지 글이 속지 영역을 넘어요. 편지를 나누거나 내용을 줄인 뒤 PDF를 다시 생성해 주세요.");
       if (alive) setReady(true);
-    })().catch(() => alive && setError("사진이나 글꼴을 불러오지 못했어요. PDF를 다시 생성해 주세요."));
+    })().catch(error => alive && setError(error instanceof Error ? error.message : "사진이나 글꼴을 불러오지 못했어요. PDF를 다시 생성해 주세요."));
     return () => { alive = false; };
   }, [draft, photoUrls]);
   return <>

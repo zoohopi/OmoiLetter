@@ -3,8 +3,10 @@ import { chromium } from "playwright";
 import { cookies } from "next/headers";
 import { AdminError } from "./access";
 import { orderPdfRanges } from "./pdf-parts";
+import { COVER_SPINE_MM, mountCoverSpread } from "./cover-spread";
+import { BLEED_MM, BOOK_TRIM } from "../letter/rules";
 
-export const PDF_TEMPLATE_VERSION = 3;
+export const PDF_TEMPLATE_VERSION = 10;
 const running = new Set<string>();
 export async function renderOrderPdf(orderId: string) {
   let stage = "브라우저 실행";
@@ -55,10 +57,11 @@ export async function renderOrderPdf(orderId: string) {
       ]).finally(() => clearTimeout(timer));
     };
     const buffer = await createPdf();
-    stage = "표지 PDF 생성";
-    const coverBuffer = await createPdf(ranges.cover);
     stage = "속지 PDF 생성";
     const interiorBuffer = await createPdf(ranges.interior);
+    stage = "책등 포함 표지 펼침 PDF 생성";
+    await page.evaluate(mountCoverSpread, { width: BOOK_TRIM.w, height: BOOK_TRIM.h, bleed: BLEED_MM, spine: COVER_SPINE_MM });
+    const coverBuffer = await createPdf();
     return { buffer, coverBuffer, interiorBuffer, pageCount };
 
   } catch (error) {

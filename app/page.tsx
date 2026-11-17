@@ -5,7 +5,9 @@ import TryQuestion from "@/components/TryQuestion";
 import WorryCards from "@/components/WorryCards";
 import StoryScroll from "@/components/StoryScroll";
 import InstaPost from "@/components/InstaPost";
+import ProductBook from "@/components/ProductBook";
 import BookPreview from "@/components/BookPreview";
+import BookTurn from "@/components/BookTurn";
 
 // 기준: 02. SITE/02. SITE.md — "사이트 = 한 권의 편지책". 최종 행동은 '편지 시작하기' 하나.
 
@@ -38,7 +40,7 @@ export default function Home() {
           <div className="inner center">
             <Reveal>
               <p className="eyebrow">p.01</p>
-              <h2 className="headline">마음을 인터뷰하고, 편지로 전합니다</h2>
+              <h2 className="headline">마음을 담은 편지, 사진과 함께 책으로 만들어드립니다</h2>
               <p className="lead">
                 사진을 고르고, 인터뷰 질문에 답해 주세요.
                 <br />
@@ -61,6 +63,9 @@ export default function Home() {
         <section id="p08" className="page page--story">
           <StoryScroll />
         </section>
+
+        {/* 실물 촬영 영상(배경 제거) — 스크롤하면 한 바퀴 돈다 */}
+        <BookTurn />
 
         {/* p.01 HOOK — 늘 마음속에 있는 말 */}
         <section id="p01" className="page hook">

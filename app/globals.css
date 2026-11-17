@@ -2393,3 +2393,27 @@ body {
 
 .share-description-space { display:none }
 @media(min-width:769px) { .share-description-break { display:none } .share-description-space { display:inline } }
+
+/* WebGL product viewer. Geometry, lighting and shadows are rendered in Three.js. */
+.product-book { padding:48px 20px 60px; text-align:center; overflow:hidden; }
+.product-book__turn { display:block; width:min(92vw,560px,72svh); height:auto; aspect-ratio:1; margin:0 auto 12px; filter:drop-shadow(0 28px 30px rgb(0 0 0 / .28)); }
+.product-book__price { display:flex; justify-content:center; align-items:baseline; gap:10px; color:var(--cream); margin-bottom:6px; }
+.product-book__price del { font-size:17px; opacity:.55; }
+.product-book__price span { font-size:16px; opacity:.55; }
+.product-book__price strong { font-size:26px; font-weight:700; }
+.product-book__note { color:var(--cream); font-size:16px; opacity:.6; margin-top:4px; }
+.product-book__caption { color:var(--cream); font-size:24px; line-height:1.7; }
+.product-book__webgl { position:relative; width:min(92vw,640px); aspect-ratio:1; margin:0 auto 12px; touch-action:pan-y; cursor:grab; }
+.product-book__webgl:active { cursor:grabbing; }
+.product-book__webgl canvas { display:block; width:100%; height:100%; }
+.product-book__loading { position:absolute; inset:40% 10% auto; color:var(--cream); font-size:14px; }
+.product-book__controls { display:flex; justify-content:center; align-items:center; gap:18px; color:var(--cream); }
+.product-book__controls p { font-size:16px; line-height:1.7; }
+.product-book__controls small { display:block; font-size:12px; opacity:.7; margin-top:6px; }
+.product-book__controls button { border:1px solid #fff6e744; background:transparent; color:inherit; border-radius:50%; width:44px; height:44px; cursor:pointer; flex:none; }
+.product-book__controls button:focus-visible,.product-book__download:focus-visible { outline:2px solid var(--cream); outline-offset:4px; }
+.product-book__open { display:block; margin:18px auto 0; border:1px solid #fff6e766; background:transparent; color:var(--cream); border-radius:999px; padding:10px 24px; font-size:14px; cursor:pointer; }
+.product-book__open:focus-visible { outline:2px solid var(--cream); outline-offset:4px; }
+.product-book__controls button:disabled { opacity:.35; cursor:default; }
+.product-book__download { margin-top:18px; border:0; background:none; color:var(--cream); font-size:12px; text-decoration:underline; text-underline-offset:4px; cursor:pointer; opacity:.7; }
+@media(max-width:600px) { .product-book { padding:32px 0; } .product-book__webgl { width:100%; } .product-book__controls { gap:10px; } .product-book__controls p { font-size:14px; } }

@@ -10,6 +10,7 @@ import { designOf, layoutOf, photoPageDesign, PAGE_PT, type DesignId, type El, t
 import type { BookSize, Draft, PhotoTransform } from "@/lib/letter/types";
 import { bookContent } from "@/lib/letter/bookContent";
 import PhotoSelection from "./PhotoSelection";
+import LetterStationery from "./LetterStationery";
 import "./BookPage.css";
 
 export type PhotoAdjust = { mode: "image" | null; activate: () => void; change: (value: PhotoTransform) => void; remove: () => void; finish: () => void };
@@ -28,6 +29,7 @@ export type PageSpec =
       answer: string;
       qid?: string;
       photoPage?: boolean;
+      letterPaper?: 1 | 2 | 3;
     };
 
 /**
@@ -39,7 +41,7 @@ export function buildInnerPages(draft: Draft): PageSpec[] {
   const pages: PageSpec[] = [];
   if (draft.bookPhotos) return bookContent(draft).map((q, i) => ({
     kind: "leaf", side: i % 2 === 0 ? "left" : "right", layout: layoutOf(design, draft.photoLayout?.[q.id]).id,
-    no: i + 1, photoId: q.photoId || null, question: q.question, answer: q.answer, qid: q.id, photoPage: true,
+    no: i + 1, photoId: q.photoId || null, question: q.question, answer: q.answer, qid: q.id, photoPage: true, letterPaper:q.letterPaper,
   }));
   let no = 0;
   for (const q of bookContent(draft)) {
@@ -122,7 +124,7 @@ export default function BookPage({ page, designOverride, design: designId, size,
     "--trim-h": `${trimOf(size).h}mm`,
     "--bleed": bleed ? `${BLEED_MM}mm` : "0mm",
     "--pt": `calc(var(--trim) / ${PAGE_PT})`,
-    background: pd.bg,
+    background: page.kind === "leaf" && page.letterPaper && page.answer.trim() ? "#FDFCF9" : pd.bg,
   } as CSSProperties;
 
   const ctx: Ctx = {
@@ -146,7 +148,7 @@ export default function BookPage({ page, designOverride, design: designId, size,
 
   return (
     <div className={`bp tp tp--${design.id} tp--${page.kind}`} style={style}>
-      {pd.els.map((el, i) => (
+      {page.kind === "leaf" && page.letterPaper && page.answer.trim() ? <LetterStationery paper={page.letterPaper} question={page.question} answer={page.answer} no={page.no} edit={textEdit}/> : pd.els.map((el, i) => (
         <Element key={i} el={el} ctx={ctx} />
       ))}
     </div>

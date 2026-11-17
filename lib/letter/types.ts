@@ -10,6 +10,8 @@ export type Step = "order" | "interview" | "photos" | "letters" | "preview";
 export type PhotoTransform = { scale: number; x: number; y: number };
 
 export type Draft = {
+  writingMode?: "direct" | "interview";
+  directLetter?: { to: string; body: string; from: string; letterId?: string };
   interviewProgress?: InterviewProgress;
   cloudId?: string;
   cloudRevision?: number;
@@ -20,7 +22,8 @@ export type Draft = {
   photoFrames?: Record<string, PhotoTransform>;
   version: 1;
   bookPhotos?: { id: string; photoId: string }[];
-  letters?: { id: string; question: string; answer: string; pageId: string | null }[];
+  letterPaper?: 1 | 2 | 3; // 편지 속지 (인터뷰 끝에서 고름. 선택한 디자인으로 책에 반영)
+  letters?: { id: string; question: string; answer: string; pageId: string | null; paper?: 1 | 2 | 3 }[];
   editorStage?: "photos" | "letters";
   status: "draft" | "submitted";
   step: Step;
@@ -42,9 +45,10 @@ export type Draft = {
 };
 
 export type InterviewProgress = {
+  paper?: 1 | 2 | 3;
   introExamples?: string[];
   question: string; relationship: string; turns: { question:string; answer:string }[];
   choices:string[]; previousQuestions:string[]; current:string; answer:string; from:string;
-  polished:string|null; stage:"interview"|"review"|"options"|"final"|"relationship";
+  polished:string|null; stage:"interview"|"review"|"from"|"options"|"paper"|"final"|"relationship";
   savedSteps:Record<number,{question:string;answer:string;choices:string[]}>;
 };
