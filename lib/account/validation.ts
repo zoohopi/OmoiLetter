@@ -35,6 +35,7 @@ export const draftSchema = z.object({
   photoTransforms: z.record(z.string(), transform).optional(), coverPhotoTransform: transform.optional(),
   photoFrames: z.record(z.string(), transform).optional(), coverPhotoFrame: transform.optional(),
   editorStage: z.enum(["photos", "letters"]).optional(),
+  coverType: z.enum(["photo", "text"]).optional(),
   letterPaper: z.union([z.literal(1), z.literal(2), z.literal(3)]).optional(),
 });
 

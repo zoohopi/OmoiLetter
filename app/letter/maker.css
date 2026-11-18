@@ -1626,3 +1626,28 @@
 .paper-card__frame{position:relative;width:100%;aspect-ratio:1}.paper-card__frame .ai-paper__sheet--real{position:absolute;left:0;top:0;width:100%;height:100%;box-sizing:border-box;transition:width .2s,height .2s,left .2s,top .2s,box-shadow .2s}.ai-paper__slot.is-picked .paper-card__frame .ai-paper__sheet--real{width:calc(100% + 36px);height:calc(100% + 36px);left:-18px;top:-18px;box-shadow:0 5px 18px #69597420}.ai-paper__slot:focus-visible{outline:2px solid #4067a0;outline-offset:9px}
 
 .ai-paper__slots .ai-paper__slot{position:relative;z-index:1;min-width:0}.ai-paper__slots.has-selection .ai-paper__slot{row-gap:26px}.ai-paper__slots.has-selection .ai-paper__slot.is-picked{z-index:3}.ai-paper__slots.has-selection .ai-paper__slot:not(.is-picked) .ai-paper__sheet--real{width:calc(100% - 24px);height:calc(100% - 24px);left:12px;top:12px}
+
+/* 편지 삭제 + 경고 팝업 */
+.letter-composer__delete { margin-right: auto; padding: 8px 12px; border: 1px solid #c4474766; border-radius: 6px; background: transparent; color: #b13a3a; font: 400 13px var(--font-body), sans-serif; cursor: pointer; }
+.letter-confirm { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: rgb(0 0 0 / .45); }
+.letter-confirm__box { width: min(340px, 100%); padding: 24px 22px 18px; border-radius: 12px; background: #fffdf9; color: #51405e; text-align: center; box-shadow: 0 16px 40px #00000033; }
+.letter-confirm__box p { margin: 0 0 18px; font: 400 14px/1.7 var(--font-body), sans-serif; }
+.letter-confirm__box b { font-size: 17px; font-weight: 600; }
+.letter-confirm__box div { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.letter-confirm__box button { padding: 11px; border: 1px solid #69597440; border-radius: 8px; background: #fff; color: #51405e; font: 400 14px var(--font-body), sans-serif; cursor: pointer; }
+.letter-confirm__box .is-danger { border-color: #b13a3a; background: #b13a3a; color: #fff; }
+/* 편지를 모두 지웠을 때 */
+.letters-empty { display: grid; justify-items: center; gap: 18px; margin: 40px auto; padding: 32px 20px; max-width: 420px; border: 1px dashed currentColor; border-radius: 12px; text-align: center; color: inherit; }
+.letters-empty p { margin: 0; font: 400 15px/1.7 var(--font-body), sans-serif; }
+.letters-empty b { font-size: 18px; font-weight: 600; }
+.letters-empty__actions { display: grid; justify-items: center; gap: 6px; }
+
+/* 표지 종류: 사진 표지 / 텍스트 표지 (텍스트 표지는 가안 — 디자인 확정 후 교체) */
+.cover-type { display: flex; justify-content: center; gap: 8px; margin: 4px 0 12px; }
+.cover-type button { padding: 8px 18px; border: 1px solid currentColor; border-radius: 999px; background: none; color: inherit; font: inherit; font-size: 14px; opacity: .55; cursor: pointer; }
+.cover-type button[aria-pressed="true"] { opacity: 1; background: #fff; color: #222; border-color: #fff; font-weight: 600; }
+.text-cover { width: 211mm; height: 211mm; box-sizing: border-box; padding: 34mm 24mm 20mm; display: flex; flex-direction: column; background: #f4efe6; color: #2b2622; font-family: "Noto Serif KR", serif; }
+.text-cover__title { margin: 0; white-space: pre-line; font-size: 15mm; line-height: 1.45; letter-spacing: -.02em; }
+.text-cover__to { margin: auto 0 3mm; font-size: 6mm; }
+.text-cover__date { margin: 0; font-size: 4.5mm; opacity: .6; }
+.text-cover__brand { margin: 12mm 0 0; padding-top: 5mm; border-top: .3mm solid currentColor; font-size: 3.6mm; letter-spacing: .3em; opacity: .7; }

@@ -22,6 +22,7 @@ export type Draft = {
   photoFrames?: Record<string, PhotoTransform>;
   version: 1;
   bookPhotos?: { id: string; photoId: string }[];
+  coverType?: "photo" | "text"; // 표지: 본인 사진 / 텍스트 표지(사진 없이)
   letterPaper?: 1 | 2 | 3; // 편지 속지 (인터뷰 끝에서 고름. 선택한 디자인으로 책에 반영)
   letters?: { id: string; question: string; answer: string; pageId: string | null; paper?: 1 | 2 | 3 }[];
   editorStage?: "photos" | "letters";

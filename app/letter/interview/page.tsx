@@ -135,6 +135,13 @@ export default function WritePage() {
     </>}
 
 
+    {isPlacement && letters.length === 0 && <section className="letters-empty" aria-label="편지 없음">
+      <p><b>페이지에 넣을 편지가 없어요.</b><br />다시 편지를 쓰시겠어요?</p>
+      <div className="letters-empty__actions">
+        <button type="button" className="btn" onClick={() => { save(() => ({ step: "interview" })); router.push("/letter/interview"); }}>다시 편지 쓰기</button>
+        <button type="button" className="interview-next-link" onClick={() => { save(() => ({ step: "preview" })); router.push("/letter/preview"); }}>편지 없이 진행하기</button>
+      </div>
+    </section>}
     {isPlacement && letters.length > 0 && <section className="chosen-letters" aria-label="뽑아 둔 편지지">
       <h2>뽑아 둔 편지지 <span>{letters.length}</span></h2>
       <p className="letter-drop-help">작성한 편지지를 아래 원하는 페이지로 끌어다 놓아 주세요.</p>
@@ -192,7 +199,8 @@ export default function WritePage() {
     }} />}
     {activeLetter && <LetterComposer key={activeLetter.id} letter={activeLetter}
       change={(patch) => save((d) => ({ letters: d.letters!.map((l) => l.id === activeLetter.id ? { ...l, ...patch } : l) }))}
-      close={closeLetter} />}
+      close={closeLetter}
+      remove={() => { save((d) => ({ letters: d.letters!.filter((l) => l.id !== activeLetter.id) })); setActiveLetterId(null); }} />}
     {(isPlacement || writingMode === "interview") && <div className="actions" style={{ justifyContent: "center" }}>
       <button className={isPlacement ? "btn" : "interview-next-link"} disabled={busy || (isPlacement ? !ready : !letters.some((letter) => letter.answer.trim()))} onClick={() => {
         save(() => ({ step: isPlacement ? "preview" : "letters" }));

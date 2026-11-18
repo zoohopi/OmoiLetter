@@ -72,8 +72,9 @@ export default function StartPage() {
   const hasDate = Boolean(draft.anniversaryDate);
   const nights = hasDate ? nightsUntil(draft.anniversaryDate) : 0;
   const past = hasDate && nights >= 0 && isPastDeadline(draft.anniversaryDate);
+  const textCover = draft.coverType === "text";
   const todo = [
-    { done: Boolean(draft.coverPhotoId), text: "사진을 눌러 표지 사진을 정해 주세요." },
+    { done: textCover || Boolean(draft.coverPhotoId), text: textCover ? "텍스트 표지로 만들어요." : "사진을 눌러 표지 사진을 정해 주세요." },
     { done: true, text: "원하시는 제목이 있다면 수정해주세요." },
     { done: hasDate && nights >= 0, text: "기념일은 언제인가요? 날짜를 눌러 골라 주세요." },
   ];
@@ -102,7 +103,14 @@ export default function StartPage() {
             <p className="field__hint">{draft.design === "magazine" ? "사진과 글이 어우러지는 매거진 디자인" : "여백과 사진에 집중하는 미니멀 디자인"}</p>
           </section>
           <div className="start-book">
-            <ScaledPage>
+            {textCover ? <ScaledPage>
+              <div className="text-cover">
+                <p className="text-cover__title">{draft.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로."}</p>
+                <p className="text-cover__to">To. {draft.recipientName || "받으시는 분"}</p>
+                <p className="text-cover__date">{draft.anniversaryDate.replaceAll("-", ". ")}</p>
+                <p className="text-cover__brand">OMOI LETTER</p>
+              </div>
+            </ScaledPage> : <ScaledPage>
               <BookPage
                 page={{ kind: "cover", photoId: draft.coverPhotoId }}
                 design={draft.design}
@@ -120,9 +128,13 @@ export default function StartPage() {
                   busy,
                 }}
               />
-            </ScaledPage>
+            </ScaledPage>}
             <p className="field__hint center">{BOOK_LABEL} · 무선 제본</p>
-            {draft.coverPhotoId && <PhotoTools draft={draft} scope="cover" mode={photoMode} setMode={setPhotoMode} />}
+            <div className="cover-type" role="group" aria-label="표지 종류">
+              <button type="button" aria-pressed={!textCover} onClick={() => updateDraft(() => ({ coverType: "photo" }))}>사진 표지</button>
+              <button type="button" aria-pressed={textCover} onClick={() => updateDraft(() => ({ coverType: "text" }))}>텍스트 표지</button>
+            </div>
+            {!textCover && draft.coverPhotoId && <PhotoTools draft={draft} scope="cover" mode={photoMode} setMode={setPhotoMode} />}
 
           </div>
           <section className="start-cover-fields" aria-labelledby="cover-details-heading">

@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MAX_ANSWER_LENGTH } from "@/lib/letter/rules";
 import type { Draft } from "@/lib/letter/types";
 
 type Letter = NonNullable<Draft["letters"]>[number];
-export default function LetterComposer({ letter, change, close }: { letter: Letter; change: (patch: Partial<Letter>) => void; close: () => void }) {
+export default function LetterComposer({ letter, change, close, remove }: { letter: Letter; change: (patch: Partial<Letter>) => void; close: () => void; remove: () => void }) {
   const dialog=useRef<HTMLDialogElement>(null);
+  const [confirming,setConfirming]=useState(false); // 삭제 경고 팝업
   useEffect(()=>{const el=dialog.current;if(!el)return;el.showModal();const before=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{el.close();document.body.style.overflow=before;};},[]);
   return <dialog className="letter-composer letter-composer--book" ref={dialog} aria-labelledby="letter-composer-title" onCancel={e=>{e.preventDefault();close();}}>
     <div className="letter-composer__top"><span id="letter-composer-title">한 페이지의 질문과 답변</span><button type="button" aria-label="편지지 닫기" onClick={close}>닫기 ×</button></div>
@@ -21,6 +22,12 @@ export default function LetterComposer({ letter, change, close }: { letter: Lett
       </label>
       <span className="letter-writing-sheet__footer">OMOI LETTER</span>
     </div>
-    <div className="letter-composer__bottom"><p>{letter.answer.length} / {MAX_ANSWER_LENGTH}자 · 자동 저장</p><button className="btn btn--small" type="button" disabled={!letter.question.trim()||!letter.answer.trim()} onClick={close}>작성 완료 · 뽑아 둔 편지지로</button></div>
+    <div className="letter-composer__bottom"><button type="button" className="letter-composer__delete" onClick={()=>setConfirming(true)}>편지 삭제</button><p>{letter.answer.length} / {MAX_ANSWER_LENGTH}자 · 자동 저장</p><button className="btn btn--small" type="button" disabled={!letter.question.trim()||!letter.answer.trim()} onClick={close}>작성 완료 · 뽑아 둔 편지지로</button></div>
+    {confirming && <div className="letter-confirm" role="alertdialog" aria-modal="true" aria-labelledby="letter-confirm-title">
+      <div className="letter-confirm__box">
+        <p id="letter-confirm-title"><b>이 편지를 삭제할까요?</b><br />삭제한 편지는 되돌릴 수 없어요.{letter.pageId ? " 페이지에 넣어 둔 편지도 함께 빠져요." : ""}</p>
+        <div><button type="button" autoFocus onClick={()=>setConfirming(false)}>취소</button><button type="button" className="is-danger" onClick={remove}>삭제</button></div>
+      </div>
+    </div>}
   </dialog>;
 }

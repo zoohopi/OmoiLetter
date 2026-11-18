@@ -8,6 +8,7 @@ import InstaPost from "@/components/InstaPost";
 import ProductBook from "@/components/ProductBook";
 import BookPreview from "@/components/BookPreview";
 import BookTurn from "@/components/BookTurn";
+import ProductTabs from "@/components/ProductTabs";
 
 // 기준: 02. SITE/02. SITE.md — "사이트 = 한 권의 편지책". 최종 행동은 '편지 시작하기' 하나.
 
@@ -126,6 +127,20 @@ export default function Home() {
             </Reveal>
             <Reveal delay={200}>
               <TryQuestion />
+            </Reveal>
+          </div>
+        </section>
+
+        {/* REVIEW — 가안. 실제 후기가 모이면 이 문구를 실제 후기로 바꿔야 한다 */}
+        <section id="review" className="page">
+          <div className="inner">
+            <Reveal className="center">
+              <p className="eyebrow">REVIEW</p>
+              <h2 className="headline">먼저 마음을 전한 분들의 이야기</h2>
+              <p className="lead">말로는 다 못 한 마음이, 한 권의 책이 되었어요.</p>
+            </Reveal>
+            <Reveal delay={150}>
+              <ProductTabs />
             </Reveal>
           </div>
         </section>
