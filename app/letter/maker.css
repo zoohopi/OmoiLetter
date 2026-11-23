@@ -1651,3 +1651,5 @@
 .text-cover__to { margin: auto 0 3mm; font-size: 6mm; }
 .text-cover__date { margin: 0; font-size: 4.5mm; opacity: .6; }
 .text-cover__brand { margin: 12mm 0 0; padding-top: 5mm; border-top: .3mm solid currentColor; font-size: 3.6mm; letter-spacing: .3em; opacity: .7; }
+.ai-paper__slot > b { color: #fff; }
+.ai-paper > .ai-letter-pages__title { color: #fff; }
