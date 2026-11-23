@@ -110,6 +110,7 @@ export default function SharePage() {
           <Link className="link-btn" href={draft.status === "submitted" ? "/letter/done" : "/letter/preview"}>
             ← 돌아가기
           </Link>
+          <Link className="btn btn--small done-order" href="/account">주문하기</Link>
         </div>
       </div>
     </main>

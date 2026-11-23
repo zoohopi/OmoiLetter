@@ -67,11 +67,9 @@ const minimal: Design = {
     bg: MP,
     els: [
       { t: "photo", r: [36, 60, 562, 412] },
-      { t: "text", r: [36, 444, 286, 506], text: "{coverTitle}", s: mSerif(11, 21) },
-      { t: "text", r: [303.02, 442.5, 563.02, 467.5], text: "想い", s: mSerif(17.28, 32, { align: "right" }) },
-      { t: "text", r: [440.02, 471, 560.02, 496], text: "Omoi Letter", s: mArial(20.25, 24.3, { align: "right", font: "logo", weight: 700 }) },
-      { t: "text", r: [36, 543, 286, 563], text: "To. {name}", s: mArial(7, 12.6) },
-      { t: "text", r: [350.02, 543, 560.02, 565], text: "{date}", s: mArial(8, 14.4, { align: "right" }) },
+      { t: "text", r: [35.83, 460.23, 420.27, 532], text: "{coverTitle}", s: mSerif(16.9153, 32.2928) },
+      { t: "text", r: [36.72, 543.01, 286.72, 563.01], text: "To. {name}", s: mArial(7, 12.6) },
+      { t: "text", r: [350.02, 543.01, 560.02, 565.01], text: "{date}", s: mArial(8, 14.4, { align: "right" }) },
     ],
   },
   back: {

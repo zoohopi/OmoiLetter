@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Draft } from "@/lib/letter/types";
 import { movePage } from "@/lib/letter/reorder";
 import { updateDraft } from "@/lib/letter/store";
@@ -14,6 +14,20 @@ import PhotoTools, { photoEditorProps } from "./PhotoTools";
 export default function PhotoPages({ draft, index, onSelect, editable = true, placingLetterId, dropPageId, onPlaceLetter, onDropHover, onRemoveLetter, letterGrab }: { draft: Draft; index: number; onSelect: (n: number) => void; editable?: boolean; placingLetterId?: string | null; dropPageId?: string | null; onPlaceLetter?: (letterId: string, pageId: string) => void; onDropHover?: (pageId: string | null) => void; onRemoveLetter?: (pageId: string) => void; letterGrab?: { start: (e: React.PointerEvent<HTMLElement>, pageId: string) => void; move: (e: React.PointerEvent<HTMLElement>) => void; end: (e: React.PointerEvent<HTMLElement>, cancel?: boolean) => void } }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  // 페이지를 끄는 동안(HTML 드래그)에는 휠 스크롤이 안 되므로, 화면 위/아래 끝에 가까이 가면 자동으로 스크롤한다.
+  useEffect(() => {
+    if (!draggingId) return;
+    let y = -1, frame = 0;
+    const track = (e: DragEvent) => { y = e.clientY; };
+    const tick = () => {
+      const h = window.innerHeight, edge = 140;
+      if (y >= 0) { const speed = y > h - edge ? (y - h + edge) / 5 : y < edge ? -(edge - y) / 5 : 0; if (speed) window.scrollBy(0, Math.max(-28, Math.min(28, speed))); }
+      frame = requestAnimationFrame(tick);
+    };
+    document.addEventListener("dragover", track);
+    frame = requestAnimationFrame(tick);
+    return () => { document.removeEventListener("dragover", track); cancelAnimationFrame(frame); };
+  }, [draggingId]);
   const [moveTargetId, setMoveTargetId] = useState<string | null>(null);
   const [moveNotice, setMoveNotice] = useState("");
   const [busy, setBusy] = useState(false);

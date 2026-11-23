@@ -6,7 +6,7 @@ import { orderPdfRanges } from "./pdf-parts";
 import { COVER_SPINE_MM, mountCoverSpread } from "./cover-spread";
 import { BLEED_MM, BOOK_TRIM } from "../letter/rules";
 
-export const PDF_TEMPLATE_VERSION = 28;
+export const PDF_TEMPLATE_VERSION = 30;
 const running = new Set<string>();
 export async function renderOrderPdf(orderId: string) {
   let stage = "브라우저 실행";

@@ -2482,3 +2482,9 @@ body {
 /* Space after the product price before the opening letter words. */
 .product-book { margin-bottom:80px; }
 @media(max-width:600px) { .product-book { margin-bottom:60px; } }
+
+/* p.05 '인터뷰하기' 버튼: 눈에 띄게 통통 튀었다가 제자리로 (2.4초마다) */
+@keyframes try-bounce { 0%, 60%, 100% { translate: 0 0; } 15% { translate: 0 -14px; } 30% { translate: 0 0; } 42% { translate: 0 -6px; } }
+.try__start { animation: try-bounce 2.4s ease-in-out infinite; }
+.try__start:hover, .try__start:focus-visible { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .try__start { animation: none; } }

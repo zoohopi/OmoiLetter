@@ -131,7 +131,7 @@ async function frontComposite(texture: HTMLCanvasElement): Promise<Blob> {
 }
 
 // Photograph-backed right-hand inside page; the cover keeps its own mockup.
-async function openPageComposite(texture: HTMLCanvasElement, side: "left" | "right"): Promise<Blob> {
+async function openPageComposite(texture: HTMLCanvasElement, side: "left" | "right", design: PageDesign): Promise<Blob> {
   const base = await bitmap("/sample/book-renders/share/open-page-blank-v1.png");
   try {
     const c = canvas(IG_W, IG_H), ctx = c.getContext("2d")!;
@@ -139,25 +139,49 @@ async function openPageComposite(texture: HTMLCanvasElement, side: "left" | "rig
     if (side === "left") { ctx.translate(IG_W, 0); ctx.scale(-1, 1); }
     ctx.drawImage(base, 0, 0, IG_W, IG_H);
     ctx.restore();
-    // Match the photographed page's gentle bow using narrow vertical strips.
+    // Keep the customer's photograph rectangular: no curve or perspective warp.
     const left = IG_W * (side === "left" ? 1 - .884 : .117), right = IG_W * (side === "left" ? 1 - .117 : .884);
     const top = IG_H * .198, bottom = IG_H * .811;
     const printed = canvas(IG_W, IG_H), ink = printed.getContext("2d")!;
-    for (let x = Math.floor(left); x < right; x++) {
-      const u = (x - left) / (right - left);
-      const arch = Math.sin(u * Math.PI);
-      const y = top - arch * IG_H * .004;
-      const end = bottom + arch * IG_H * .003;
-      ink.drawImage(texture, u * SIZE, 0, SIZE / (right - left) + .1, SIZE, x, y, 1.1, end - y);
-    }
-    // Transfer the real paper's neutral light and grain to the printed ink.
-    // RGB channels receive the same light factor so photo hues remain intact.
+    // Continuous four-pixel feather, sampled at pixel centres.
+    ink.drawImage(texture, left, top, right - left, bottom - top);
+    ink.filter = "none";
     const paper = ctx.getImageData(0, 0, IG_W, IG_H).data;
+    const softPaper = canvas(IG_W, IG_H), soft = softPaper.getContext("2d")!;
+    soft.filter = "blur(1.5px)";
+    soft.drawImage(c, 0, 0);
+    const smooth = soft.getImageData(0, 0, IG_W, IG_H).data;
+    const lightPaper = canvas(IG_W, IG_H), lightCtx = lightPaper.getContext("2d")!;
+    lightCtx.filter = "blur(14px)";
+    lightCtx.drawImage(c, 0, 0);
+    const illumination = lightCtx.getImageData(0, 0, IG_W, IG_H).data;
     const pixels = ink.getImageData(0, 0, IG_W, IG_H);
+    const photoEdges = design.els.filter(el => el.t === "photo").map(el => ({
+      left: left + el.r[0] / PAGE_PT * (right - left),
+      top: top + el.r[1] / PAGE_PT * (bottom - top),
+      right: left + el.r[2] / PAGE_PT * (right - left),
+      bottom: top + el.r[3] / PAGE_PT * (bottom - top),
+    }));
     for (let i = 0; i < pixels.data.length; i += 4) {
       if (!pixels.data[i + 3]) continue;
-      const light = Math.max(.78, Math.min(1.04, (paper[i] * .2126 + paper[i + 1] * .7152 + paper[i + 2] * .0722) / 227));
-      for (let ch = 0; ch < 3; ch++) pixels.data[i + ch] *= light;
+      const x = (i / 4) % IG_W, y = Math.floor(i / 4 / IG_W);
+      for (const edge of photoEdges) {
+        // Include resampling fringes outside the fractional photo bounds.
+        if (x < Math.floor(edge.left) - 1 || x > Math.ceil(edge.right) || y < Math.floor(edge.top) - 1 || y > Math.ceil(edge.bottom)) continue;
+        const inset = Math.min(x + .5 - edge.left, edge.right - x - .5, y + .5 - edge.top, edge.bottom - y - .5);
+        const t = Math.max(0, Math.min(1, inset / 4));
+        const opacity = t * t * (3 - 2 * t);
+        pixels.data[i + 3] *= opacity;
+      }
+      const luminance = illumination[i] * .2126 + illumination[i + 1] * .7152 + illumination[i + 2] * .0722;
+      // Preserve photographed gutter shading, but protect photo colour and contrast.
+      const light = Math.max(.86, Math.min(1.025, 1 + (luminance / 227 - 1) * .7));
+      const fibre = Math.max(-1.4, Math.min(1.4,
+        ((paper[i] - smooth[i]) * .2126 + (paper[i + 1] - smooth[i + 1]) * .7152 + (paper[i + 2] - smooth[i + 2]) * .0722) * .75));
+      for (let ch = 0; ch < 3; ch++) {
+        // A faint paper reflection makes this ink on stock, not a pasted print.
+        pixels.data[i + ch] = pixels.data[i + ch] * light * .985 + paper[i + ch] * .015 + fibre;
+      }
     }
     ink.putImageData(pixels, 0, 0);
     ctx.drawImage(printed, 0, 0);
@@ -175,9 +199,19 @@ export async function renderInstagramSlides(draft: Draft): Promise<Slide[]> {
     const slides: Slide[] = [{ name: "omoi-letter-01-cover.jpg", blob: await frontComposite(cover) }];
     for (const [i, page] of bookContent(draft).entries()) {
       if (!page.photoId) continue;
-      const pd = photoPageDesign(draft.design, draft.photoLayout?.[page.id], false);
+      const layoutId = draft.photoLayout?.[page.id];
+      const original = photoPageDesign(draft.design, layoutId, false);
+      const pd: PageDesign = layoutId === "square" || layoutId === "portrait2" ? {
+        ...original,
+        els: original.els.map(el => {
+          if (el.t !== "photo") return el;
+          const [x, y, right, bottom] = el.r;
+          const insetX = (right - x) * .075, insetY = (bottom - y) * .075;
+          return { ...el, r: [x + insetX, y + insetY, right - insetX, bottom - insetY] };
+        }),
+      } : original;
       const texture = await pageTexture({ ...pd, bg: "#FFFFFF" }, draft, page.photoId!, draft.photoTransforms?.[page.id], i + 1);
-      slides.push({ name: `omoi-letter-${String(slides.length + 1).padStart(2, "0")}.jpg`, blob: await openPageComposite(texture, i % 2 === 0 ? "left" : "right") });
+      slides.push({ name: `omoi-letter-${String(slides.length + 1).padStart(2, "0")}.jpg`, blob: await openPageComposite(texture, i % 2 === 0 ? "left" : "right", pd) });
     }
     return slides;
   }
