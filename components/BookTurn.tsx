@@ -49,5 +49,6 @@ export default function BookTurn() {
     <p className="product-book__price"><del aria-label="정가 79,000원">79,000원</del><span aria-hidden="true">→</span><strong aria-label="할인가 49,000원">49,000원</strong></p>
     <p className="product-book__caption">사진과 마음이 담긴 한 권의 편지책</p>
     <p className="product-book__note">*30페이지 기준</p>
+    <p className="product-book__note">8×8 · 211 × 211mm</p>
   </section>;
 }

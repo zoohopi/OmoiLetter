@@ -2478,3 +2478,7 @@ body {
 .ptabs-gallery img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 6px; }
 .ptabs-gallery li p { margin: 6px 0; line-height: 1.7; font-size: 15px; }
 .ptabs-gallery li small { opacity: .6; }
+
+/* Space after the product price before the opening letter words. */
+.product-book { margin-bottom:80px; }
+@media(max-width:600px) { .product-book { margin-bottom:60px; } }

@@ -3,11 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 // p.02 — 고민 카드. 한 장씩 보여 주고 옆으로 넘긴다 (스와이프 · 화살표 · 점).
-// Three original film photographs, one scene for each concern.
+// One photograph for each concern.
 const WORRIES: { text: string; lines?: string[]; img: string; alt: string }[] = [
   { text: "카드에 “생일 축하해, 사랑해” 쓰고 나면 더 쓸 말이 없습니다.", lines: ["카드에 “생일 축하해, 사랑해”", "쓰고 나면 더 쓸 말이 없습니다."], img: "/worries/01-writing-card-v4.webp", alt: "따뜻한 창가의 나무 책상 위 펼친 편지지와 은색 펜" },
   { text: "편지와 선물을 어떤 걸 준비해야 좋아할지 막막합니다.", lines: ["편지와 선물을 어떤 걸 준비해야", "좋아할지 막막합니다."], img: "/worries/02-shy-letter-v1.webp", alt: "노을 진 강가에서 작은 편지를 쥔 채 나란히 앉은 두 사람" },
-  { text: "이번 생일엔 정말 기억에 남는 걸 주고 싶습니다.", lines: ["이번 생일엔 정말 기억에", "남는 걸 주고 싶습니다."], img: "/worries/03-book-gift-v1.webp", alt: "생일을 맞아 사진과 마음을 담은 작은 책을 선물하는 손" },
 ];
 
 export default function WorryCards() {
