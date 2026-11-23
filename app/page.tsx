@@ -5,7 +5,6 @@ import TryQuestion from "@/components/TryQuestion";
 import WorryCards from "@/components/WorryCards";
 import StoryScroll from "@/components/StoryScroll";
 import InstaPost from "@/components/InstaPost";
-import ProductBook from "@/components/ProductBook";
 import BookPreview from "@/components/BookPreview";
 import BookTurn from "@/components/BookTurn";
 import ProductTabs from "@/components/ProductTabs";
@@ -65,7 +64,7 @@ export default function Home() {
           <StoryScroll />
         </section>
 
-        {/* 실물 촬영 영상(배경 제거) — 스크롤하면 한 바퀴 돈다 */}
+        {/* 배경을 제거한 책 영상 — 자동 재생 · 반복 재생 */}
         <BookTurn />
 
         {/* p.01 HOOK — 늘 마음속에 있는 말 */}
