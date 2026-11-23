@@ -1,11 +1,16 @@
 "use client";
+import { useState } from "react";
 import BookPage from "./BookPage";
 import ScaledPage from "./ScaledPage";
 import {LETTER_PAPERS,type LetterPaperId} from "@/lib/letter/papers";
-// Shared anonymous example, independent of unfinished interview answers.
-const SAMPLE="To. 소중한 너에게\n\n요즘 잘 지내고 있어? 문득 우리가 함께 걷던 골목길이 생각나서 펜을 들었어. 함께 걷던 평범한 길도 너와 나눈 뒤에는 오래 남는 장면이 되었어. 별것 아닌 이야기에 한참 웃었던 밤, 비 오는 날 우산 하나를 나눠 쓰던 순간들이 참 소중해.\n\n내가 힘들 때마다 말없이 곁에 있어 줘서, 늘 내 이야기에 귀 기울여 줘서 정말 고마워. 그때는 쑥스러워서 제대로 말하지 못했지만, 너 덕분에 많이 웃을 수 있었어.\n\n앞으로도 서로의 하루를 물어보며 작은 마음들을 자주 나누고 싶어. 이번엔 내가 먼저 연락할게.\n\nFrom. 늘 너를 응원하는 내가";
-export default function LetterPaperPicker({value,onChange}:{value:LetterPaperId|null|undefined;onChange:(id:LetterPaperId)=>void}){
- return <div className={`ai-paper__slots ${value ? "has-selection" : ""}`}>{LETTER_PAPERS.map(paper=><button type="button" key={paper.id} data-paper={paper.id} aria-pressed={value===paper.id} aria-label={`${paper.name} 선택`} className={`ai-paper__slot ${value===paper.id?"is-picked":""}`} onClick={()=>onChange(paper.id)}>
- <div className="paper-card__frame"><div className="ai-paper__sheet ai-paper__sheet--real"><ScaledPage><BookPage page={{kind:"leaf",side:"left",layout:"portrait",no:1,photoId:null,question:"",answer:SAMPLE,photoPage:true,letterPaper:paper.id}} size="8x8" recipientName="" anniversaryDate=""/></ScaledPage></div></div><b>{paper.name}</b>
- </button>)}</div>;
+// 사진 페이지와 같은 방식: 편지 한 장을 눌러 고른 뒤, 아래 버튼으로 그 장의 속지를 정한다.
+const ORDINAL=["첫째","둘째","셋째","넷째","다섯째","여섯째","일곱째","여덟째","아홉째","열째"];
+export default function LetterPaperPicker({pages,papers,onChange,onEdit,intro}:{pages:string[];papers:LetterPaperId[];onChange:(index:number,id:LetterPaperId)=>void;onEdit?:(index:number,text:string)=>void;intro?:React.ReactNode}){
+ const [selected,setSelected]=useState(0);
+ const sel=Math.min(selected,pages.length-1);
+ return <div className="paper-pick">
+  <p className="paper-pick__count">편지 {ORDINAL[sel]??`${sel+1}번째`}장 (전체 {pages.length}장)</p>{intro}
+  <div className="paper-pick__one"><button type="button" className="paper-pick__nav" aria-label="이전 장" disabled={sel===0} onClick={()=>setSelected(sel-1)}>‹</button>{pages.map((answer,n)=>n!==sel?null:<div role="button" tabIndex={0} key={n} className={`paper-pick__page${n===sel?" is-selected":""}`} aria-pressed={n===sel} aria-label={`편지 ${n+1}장 선택`} onClick={()=>setSelected(n)} onKeyDown={e=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setSelected(n);}}}><ScaledPage><BookPage page={{kind:"leaf",side:n%2?"right":"left",layout:"portrait",no:n+1,photoId:null,question:"편지 "+(n+1),answer,photoPage:true,letterPaper:papers[n]??1}} size="8x8" recipientName="" anniversaryDate="" textEdit={onEdit?{onChange:v=>onEdit(n,v),maxLength:2000,placeholder:"편지 내용을 적어 주세요"}:undefined}/></ScaledPage></div>)}<button type="button" className="paper-pick__nav" aria-label="다음 장" disabled={sel>=pages.length-1} onClick={()=>setSelected(sel+1)}>›</button></div>
+  <div className="layout-pick" role="group" aria-label={`편지 ${sel+1}장 속지`}>{LETTER_PAPERS.map(p=><button key={p.id} type="button" aria-pressed={(papers[sel]??1)===p.id} onClick={()=>onChange(sel,p.id)}>{p.name}</button>)}</div>
+ </div>;
 }

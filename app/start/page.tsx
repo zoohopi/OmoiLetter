@@ -103,20 +103,13 @@ export default function StartPage() {
             <p className="field__hint">{draft.design === "magazine" ? "사진과 글이 어우러지는 매거진 디자인" : "여백과 사진에 집중하는 미니멀 디자인"}</p>
           </section>
           <div className="start-book">
-            {textCover ? <ScaledPage>
-              <div className="text-cover">
-                <p className="text-cover__title">{draft.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로."}</p>
-                <p className="text-cover__to">To. {draft.recipientName || "받으시는 분"}</p>
-                <p className="text-cover__date">{draft.anniversaryDate.replaceAll("-", ". ")}</p>
-                <p className="text-cover__brand">OMOI LETTER</p>
-              </div>
-            </ScaledPage> : <ScaledPage>
+            {<ScaledPage>
               <BookPage
                 page={{ kind: "cover", photoId: draft.coverPhotoId }}
                 design={draft.design}
                 size="8x8"
                 recipientName={draft.recipientName}
-                coverTitle={draft.coverTitle} anniversaryDate={draft.anniversaryDate}
+                coverType={draft.coverType} coverTitle={draft.coverTitle} anniversaryDate={draft.anniversaryDate}
                 {...photoEditorProps(draft, "cover", photoMode, setPhotoMode)}
                 coverEdit={{
                   readOnlyText: true,

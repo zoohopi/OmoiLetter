@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Draft } from "@/lib/letter/types";
+import { movePage } from "@/lib/letter/reorder";
 import { updateDraft } from "@/lib/letter/store";
 import { setQuestionPhoto } from "@/lib/letter/photoActions";
 import BookPage, { buildInnerPages } from "./BookPage";
@@ -10,28 +11,59 @@ import LayoutPick from "./LayoutPick";
 import { photoPageDesign } from "@/lib/letter/designs";
 import PhotoTools, { photoEditorProps } from "./PhotoTools";
 
-export default function PhotoPages({ draft, index, onSelect, editable = true, placingLetterId, dropPageId, onPlaceLetter, onDropHover }: { draft: Draft; index: number; onSelect: (n: number) => void; editable?: boolean; placingLetterId?: string | null; dropPageId?: string | null; onPlaceLetter?: (letterId: string, pageId: string) => void; onDropHover?: (pageId: string | null) => void }) {
+export default function PhotoPages({ draft, index, onSelect, editable = true, placingLetterId, dropPageId, onPlaceLetter, onDropHover, onRemoveLetter, letterGrab }: { draft: Draft; index: number; onSelect: (n: number) => void; editable?: boolean; placingLetterId?: string | null; dropPageId?: string | null; onPlaceLetter?: (letterId: string, pageId: string) => void; onDropHover?: (pageId: string | null) => void; onRemoveLetter?: (pageId: string) => void; letterGrab?: { start: (e: React.PointerEvent<HTMLElement>, pageId: string) => void; move: (e: React.PointerEvent<HTMLElement>) => void; end: (e: React.PointerEvent<HTMLElement>, cancel?: boolean) => void } }) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [moveTargetId, setMoveTargetId] = useState<string | null>(null);
+  const [moveNotice, setMoveNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const pages = buildInnerPages(draft);
   const selected = Math.min(index, Math.max(0, pages.length - 1));
   const pairs = Array.from({ length: Math.ceil(pages.length / 2) }, (_, i) => pages.slice(i * 2, i * 2 + 2));
 
+  const canReorder = editable && Boolean(draft.bookPhotos);
+  const grab = useRef<{ x: number; y: number; active: boolean } | null>(null);
+  const suppressClick = useRef(false);
+  const moveTo = (fromId: string, toId: string) => {
+    if (!canReorder || fromId === toId) return;
+    const target = draft.bookPhotos!.findIndex(page => page.id === toId);
+    if (target < 0 || !draft.bookPhotos!.some(page => page.id === fromId)) return;
+    updateDraft(d => ({ bookPhotos: movePage(d.bookPhotos ?? [], fromId, toId) }));
+    onSelect(target);
+    setEditingId(null);
+    setMoveNotice(`내지 ${target + 1}쪽으로 옮겼어요.`);
+  };
+
   return <section className="photo-page-list" aria-label="모든 사진 페이지">
+    {canReorder && <p className="field__hint center">사진을 끌어서 원하는 쪽에 놓으면 순서가 바뀌어요.</p>}
+    <p className="photo-page-list__move-status" role="status">{moveNotice}</p>
     {error && <p className="ph-error" role="alert">{error}</p>}
     {pairs.map((pair, row) => <div className="photo-page-list__spread" key={row}>
       <div className={`compose-pages ${pair.length === 1 ? "compose-pages--single" : ""}`}>
         {pair.map((page, offset) => {
           const n = row * 2 + offset;
           const id = page.kind === "leaf" ? page.qid ?? "" : "";
-          return <div key={id} className={`photo-page ${n === selected ? "is-selected" : ""} ${dropPageId === id ? "is-drop-target" : ""}`} data-page-index={n} data-letter-drop-id={onPlaceLetter ? id : undefined}
+          return <div key={id} className={`photo-page ${n === selected ? "is-selected" : ""} ${dropPageId === id ? "is-drop-target" : ""} ${draggingId === id ? "is-dragging" : ""} ${moveTargetId === id ? "is-move-target" : ""}`} data-page-index={n} data-letter-drop-id={onPlaceLetter ? id : undefined}
+            draggable={canReorder && editingId !== id}
+            onDragStart={e => {
+              if (!canReorder || editingId === id) { e.preventDefault(); return; }
+              e.dataTransfer.setData("application/x-omoi-page", id);
+              e.dataTransfer.effectAllowed = "move";
+              setDraggingId(id);
+            }}
+            onDragEnd={() => { setDraggingId(null); setMoveTargetId(null); }}
             onPointerDownCapture={() => onSelect(n)}
+            // 이미 편지가 놓인 페이지는 잡고 끌어서 다시 옮길 수 있다 (마우스, 6px 이상 움직였을 때만)
+            onPointerDown={e => { if (letterGrab && e.pointerType !== "touch" && e.button === 0 && draft.letters?.some(l => l.pageId === id) && !(e.target as HTMLElement).closest("button,textarea,input")) grab.current = { x: e.clientX, y: e.clientY, active: false }; }}
+            onPointerMove={e => { const g = grab.current; if (!g || !letterGrab) return; if (!g.active && Math.hypot(e.clientX - g.x, e.clientY - g.y) > 6) { g.active = true; letterGrab.start(e, id); } else if (g.active) letterGrab.move(e); }}
+            onPointerUp={e => { const g = grab.current; grab.current = null; if (g?.active && letterGrab) { suppressClick.current = true; letterGrab.end(e); } }}
+            onPointerCancel={e => { const g = grab.current; grab.current = null; if (g?.active && letterGrab) letterGrab.end(e, true); }}
             onDoubleClickCapture={() => { onSelect(n); if (editable) setEditingId(id); }}
-            onClick={() => { if(placingLetterId && onPlaceLetter)onPlaceLetter(placingLetterId,id); }}
-            onDragOver={(e) => { if(!onPlaceLetter || !e.dataTransfer.types.includes("application/x-omoi-letter"))return;e.preventDefault();e.dataTransfer.dropEffect="move";onDropHover?.(id); }}
-            onDragLeave={(e) => { if(!(e.relatedTarget instanceof Node) || !e.currentTarget.contains(e.relatedTarget))onDropHover?.(null); }}
-            onDrop={(e) => {const letterId=e.dataTransfer.getData("application/x-omoi-letter");if(!letterId||!onPlaceLetter)return;e.preventDefault();onPlaceLetter(letterId,id);onDropHover?.(null);}}>
+            onClick={() => { if (suppressClick.current) { suppressClick.current = false; return; } if(placingLetterId && onPlaceLetter)onPlaceLetter(placingLetterId,id); else if(onRemoveLetter) onSelect(n); }}
+            onDragOver={(e) => { if(canReorder && e.dataTransfer.types.includes("application/x-omoi-page")) { e.preventDefault(); e.dataTransfer.dropEffect="move"; setMoveTargetId(id); return; } if(!onPlaceLetter || !e.dataTransfer.types.includes("application/x-omoi-letter"))return;e.preventDefault();e.dataTransfer.dropEffect="move";onDropHover?.(id); }}
+            onDragLeave={(e) => { if(!(e.relatedTarget instanceof Node) || !e.currentTarget.contains(e.relatedTarget)) { onDropHover?.(null); setMoveTargetId(null); } }}
+            onDrop={(e) => {const pageId=e.dataTransfer.getData("application/x-omoi-page");if(pageId && canReorder){e.preventDefault();e.stopPropagation();moveTo(pageId,id);setDraggingId(null);setMoveTargetId(null);return;}const letterId=e.dataTransfer.getData("application/x-omoi-letter");if(!letterId||!onPlaceLetter)return;e.preventDefault();onPlaceLetter(letterId,id);onDropHover?.(null);}}>
             <ScaledPage><BookPage page={page} design={draft.design} size={draft.bookSize} recipientName={draft.recipientName} anniversaryDate={draft.anniversaryDate}
               {...photoEditorProps(draft, id, editable && editingId === id && n === selected ? "image" : null, (mode) => { onSelect(n); setEditingId(mode ? id : null); }, editable)}
               photoEdit={editable ? { busy, onPhoto: (file) => {
@@ -39,8 +71,10 @@ export default function PhotoPages({ draft, index, onSelect, editable = true, pl
                 void setQuestionPhoto(id, file).catch(() => setError("사진을 열지 못했어요.")).finally(() => setBusy(false));
               } } : undefined} />
             </ScaledPage>
-            <button className="link-btn photo-page__select" type="button" aria-pressed={n === selected} aria-label={`내지 ${n + 1}쪽 선택`}
+            <button className="link-btn photo-page__select" type="button" aria-pressed={n === selected} aria-label={`내지 ${n + 1}쪽 선택`} title={canReorder ? "드래그하여 순서 변경 · Alt+방향키로 이동" : undefined}
+              onKeyDown={e => { if(!canReorder || !e.altKey || !["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key))return; const to=n+(["ArrowUp","ArrowLeft"].includes(e.key)?-1:1); const target=pages[to]; if(target?.kind!=="leaf" || !target.qid)return; e.preventDefault();moveTo(id,target.qid); }}
               onClick={() => { onSelect(n); setEditingId(null); }}>내지 {n + 1}쪽</button>
+            {onRemoveLetter && n === selected && draft.letters?.some(l => l.pageId === id) && <button type="button" className="photo-page__remove-letter" onClick={(e) => { e.stopPropagation(); onRemoveLetter(id); }} aria-label={`내지 ${n + 1}쪽 편지를 보관함으로 되돌리기`} title="보관함으로 되돌리기">↺</button>}
           </div>;
         })}
       </div>

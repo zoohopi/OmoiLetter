@@ -64,8 +64,9 @@ export function checkReady(draft: Draft) {
   if (draft.anniversaryDate && isPastDeadline(draft.anniversaryDate) && !draft.lateAccepted)
     problems.push("기념일 이후 도착에 동의가 필요해요.");
   if (draft.bookPhotos) {
-    if (draft.bookPhotos.length < 9 || draft.bookPhotos.length > 19) problems.push("내지 사진은 9~19장을 골라 주세요.");
-    if (draft.bookPhotos.some((p) => !p.photoId)) problems.push("사진이 비어 있는 펼침에 사진을 넣어 주세요.");
+    // 최소 9장만 확인 (최대 없음. 30장부터 가격 증가는 결제 페이지에서 처리 예정)
+    if (draft.bookPhotos.filter((p) => p.photoId).length < 9) problems.push("내지 사진은 9장 이상 골라 주세요.");
+    if (draft.bookPhotos.some((p) => !p.photoId && !(draft.letters ?? []).some((l) => l.pageId === p.id))) problems.push("사진이 비어 있는 펼침에 사진을 넣어 주세요.");
     if (!answered.length) problems.push("편지를 한 편 이상 써 주세요.");
     if ((draft.letters ?? []).some((l) => l.pageId && (!l.question.trim() || !l.answer.trim() || !draft.bookPhotos!.some((p) => p.id === l.pageId))))
       problems.push("작성 중인 편지의 내용과 넣을 페이지를 확인해 주세요.");

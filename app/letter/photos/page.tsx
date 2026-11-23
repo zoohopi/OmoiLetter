@@ -28,7 +28,6 @@ export default function PhotosPage() {
 
   async function select(files: FileList | null) {
     if (!files?.length) return;
-    if ((draft?.bookPhotos?.length ?? 0) + files.length > 19) { setError("내지 사진은 최대 19장까지 넣을 수 있어요."); return; }
     setBusy(true); setError("");
     const prepared: string[] = [];
     try {
@@ -55,11 +54,11 @@ export default function PhotosPage() {
 
   return <main className="maker maker--compose photos-step"><div className="maker__inner maker__inner--wide">
     <h1 className="maker__title">사진으로 시작하고, 마음을 더해요</h1>
-    <p className="maker__lead">내지 사진 9~19장을 먼저 넣어 책을 구성해 주세요.</p>
-    {(draft.bookPhotos?.length ?? 0) < 19 && <button className="btn photos-step__pick" type="button" disabled={busy} onClick={() => input.current?.click()}>
+    <p className="maker__lead">내지 사진 9장 이상을 먼저 넣어 책을 구성해 주세요.</p>
+    {<button className="btn photos-step__pick" type="button" disabled={busy} onClick={() => input.current?.click()}>
       {busy ? "사진을 책에 넣고 있어요…" : draft.bookPhotos?.length ? "사진 추가하기" : "사진 선택하기"}
     </button>}
-    <input ref={input} type="file" accept="image/*" multiple hidden disabled={busy} aria-label="내지 사진 9~19장 선택"
+    <input ref={input} type="file" accept="image/*" multiple hidden disabled={busy} aria-label="내지 사진 9장 이상 선택"
       onChange={(e) => { void select(e.target.files); e.target.value = ""; }} />
         {error && <p className="ph-error" role="alert">{error}</p>}
     {Boolean(draft.bookPhotos?.length) && (draft.bookPhotos?.length ?? 0) < 9 && <section aria-label="선택한 사진 미리보기">
@@ -71,7 +70,7 @@ export default function PhotosPage() {
     {(draft.bookPhotos?.length ?? 0) >= 9 && <>
       <PhotoPages draft={draft} index={selectedPage} onSelect={setSelectedPage} />
       <div className="actions photos-step__next">
-        <button className="btn" disabled={busy || !draft.bookPhotos || draft.bookPhotos.length < 9 || draft.bookPhotos.length > 19 || draft.bookPhotos.some((p) => !p.photoId)}
+        <button className="btn" disabled={busy || !draft.bookPhotos || draft.bookPhotos.length < 9 || draft.bookPhotos.some((p) => !p.photoId)}
           onClick={() => { updateDraft(() => ({ step: "interview", editorStage: "letters" })); router.push("/letter/interview"); }}>사진 편집 완료 · 인터뷰하기 →</button>
       </div>
     </>}

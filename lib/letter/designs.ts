@@ -10,7 +10,7 @@ export type DesignId = "minimal" | "magazine"; // 우표는 추후 작업 (06. D
 export type LayoutId = "landscape" | "portrait" | "portrait2" | "square";
 
 export type Rect = [number, number, number, number];
-type Font = "serif" | "sans" | "arial" | "pre" | "hand";
+type Font = "serif" | "sans" | "arial" | "pre" | "hand" | "logo";
 
 export type TextStyle = {
   font: Font;
@@ -68,8 +68,8 @@ const minimal: Design = {
     els: [
       { t: "photo", r: [36, 60, 562, 412] },
       { t: "text", r: [36, 444, 286, 506], text: "{coverTitle}", s: mSerif(11, 21) },
-      { t: "text", r: [303.02, 440, 563.02, 480], text: "想い", s: mSerif(19.2, 32, { align: "right" }) },
-      { t: "text", r: [440.02, 479, 560.02, 504], text: "OMOI LETTER", s: mArial(12, 14.4, { align: "right" }) },
+      { t: "text", r: [303.02, 442.5, 563.02, 467.5], text: "想い", s: mSerif(17.28, 32, { align: "right" }) },
+      { t: "text", r: [440.02, 471, 560.02, 496], text: "Omoi Letter", s: mArial(20.25, 24.3, { align: "right", font: "logo", weight: 700 }) },
       { t: "text", r: [36, 543, 286, 563], text: "To. {name}", s: mArial(7, 12.6) },
       { t: "text", r: [350.02, 543, 560.02, 565], text: "{date}", s: mArial(8, 14.4, { align: "right" }) },
     ],
@@ -140,7 +140,7 @@ const magazine: Design = {
     bg: GC,
     els: [
       { t: "photo", r: [0, 0, 398, PAGE_PT] },
-      { t: "text", r: [422, 44, 582, 144], text: "OMOI\nLetter", s: gSerif(29, 32) },
+      { t: "text", r: [422, 44, 582, 144], text: "Omoi\nLetter", s: gSerif(29, 32) },
       { t: "text", r: [422, 180, 572, 290], text: "A LETTER FOR YOU\n{coverTitle}", s: gSerif(9, 17) },
       { t: "text", r: [422, 505, 572, 535], text: "To. {name}", s: gSerif(10, 16) },
       { t: "text", r: [422, 535, 572, 555], text: "{date}", s: gArial(8, 12.8, { track: 80 }) },
@@ -327,3 +327,18 @@ export function photoPageDesign(designId: DesignId | undefined, layoutId: Layout
 
 
 
+
+// Centered editorial type cover; the title's first line sits above the rule.
+export function textCoverLines(title?: string) {
+  const lines = (title ?? "말하지 못한 마음을,\n한 권의 편지로.").split(/\n/).map(line => line.trim());
+  return [lines[0] ?? "", lines.slice(1).join("\n")];
+}
+// Artwork exported directly from the user's centered PhotoCraft cover.
+export const TEXT_COVER_DESIGN: PageDesign = {
+  bg: BOOK_PAPER_COLOR,
+  els: [
+    { t: "img", r: [0, 0, PAGE_PT, PAGE_PT], src: "/designs/text-cover-artwork-v5.png" },
+    { t: "text", r: [200, 488.01, 398, 504.01], text: "{dateDot}",
+      s: { font: "serif", size: 8, lead: 12, align: "center", color: "#37392F" } },
+  ],
+};

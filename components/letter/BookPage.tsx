@@ -6,7 +6,7 @@
 import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { beginDraftEdit, endDraftEdit, usePhotoUrl } from "@/lib/letter/store";
 import { BLEED_MM, trimOf } from "@/lib/letter/rules";
-import { designOf, layoutOf, photoPageDesign, PAGE_PT, type DesignId, type El, type LayoutId, type Rect, type TextStyle } from "@/lib/letter/designs";
+import { designOf, layoutOf, photoPageDesign, PAGE_PT, TEXT_COVER_DESIGN, textCoverLines, type DesignId, type El, type LayoutId, type Rect, type TextStyle } from "@/lib/letter/designs";
 import type { BookSize, Draft, PhotoTransform } from "@/lib/letter/types";
 import { bookContent } from "@/lib/letter/bookContent";
 import PhotoSelection from "./PhotoSelection";
@@ -66,6 +66,7 @@ type Props = {
   design?: DesignId;
   size: BookSize;
   bleed?: boolean;
+  coverType?: "photo" | "text";
   coverTitle?: string;
   recipientName: string;
   anniversaryDate: string;
@@ -114,10 +115,10 @@ type Ctx = {
   textEdit?: Props["textEdit"];
 };
 
-export default function BookPage({ page, designOverride, design: designId, size, bleed = false, coverTitle, recipientName, anniversaryDate, coverEdit, photoUrls, coverPhotoTransform, photoTransform, photoFrame, photoAdjust, photoEdit, textEdit }: Props) {
+export default function BookPage({ page, designOverride, design: designId, size, bleed = false, coverType, coverTitle, recipientName, anniversaryDate, coverEdit, photoUrls, coverPhotoTransform, photoTransform, photoFrame, photoAdjust, photoEdit, textEdit }: Props) {
   const design = designOverride ?? designOf(designId);
   const pd =
-    page.kind === "cover" ? design.cover : page.kind === "back" ? design.back : page.photoPage ? photoPageDesign(designId, page.layout, Boolean(page.answer.trim())) : layoutOf(design, page.layout)[page.side];
+    page.kind === "cover" ? coverType === "text" ? TEXT_COVER_DESIGN : design.cover : page.kind === "back" ? design.back : page.photoPage ? photoPageDesign(designId, page.layout, Boolean(page.answer.trim())) : layoutOf(design, page.layout)[page.side];
 
   const style = {
     "--trim": `${trimOf(size).w}mm`,
@@ -170,6 +171,7 @@ function box(r: Rect): CSSProperties {
 }
 
 const FONTS = {
+  logo: "var(--font-logo), sans-serif",
   hand: "var(--font-title), cursive",
   serif: "var(--font-serif), serif",
   sans: "var(--font-sans-kr), sans-serif",
@@ -208,6 +210,8 @@ function leadOf(answer: string) {
 function fill(text: string, ctx: Ctx) {
   const two = String(ctx.no).padStart(2, "0");
   return text
+    .replaceAll("{coverTitleTop}", textCoverLines(ctx.coverTitle)[0])
+    .replaceAll("{coverTitleBottom}", textCoverLines(ctx.coverTitle)[1])
     .replaceAll("{coverTitle}", ctx.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로.")
     .replaceAll("{name}", ctx.name || "○○")
     .replaceAll("{dateDot}", formatDate(ctx.date, "."))
@@ -248,8 +252,8 @@ function Element({ el, ctx }: { el: El; ctx: Ctx }) {
     case "text":
       if (el.text.includes("{q}") && ctx.textEdit?.onQuestion) return <div style={{ ...box(el.r), ...textCss(el.s) }}><QuestionEdit ctx={ctx} /></div>;
       return el.fit ? (
-        <FitText style={{ ...box(el.r), ...textCss(el.s) }} deps={[el.text, ctx.question, ctx.answer]}>
-          {fill(el.text, ctx)}
+        <FitText style={{ ...box(el.r), ...textCss(el.s) }} deps={[el.text, ctx.question, ctx.answer, ctx.coverTitle]}>
+          {ctx.coverEdit?.onTitle && (el.text === "{coverTitleTop}" || el.text === "{coverTitleBottom}") ? <SplitCoverTitle text={el.text} ctx={ctx} /> : fill(el.text, ctx)}
         </FitText>
       ) : (
         <div style={{ ...box(el.r), ...textCss(el.s) }}>{ctx.coverEdit ? <CoverText text={el.text} ctx={ctx} /> : fill(el.text, ctx)}</div>
@@ -372,54 +376,40 @@ function PhotoSlot({ r, ctx }: { r: Rect; ctx: Ctx }) {
 /* ---------------- 글 ---------------- */
 
 // 표지 위에서 이름·날짜를 바로 고친다. {name} {date} 자리에 입력칸이 들어간다.
-function CoverText({ text, ctx }: { text: string; ctx: Ctx }) {
+function SplitCoverTitle({ text, ctx }: { text: string; ctx: Ctx }) {
+  const [editing, setEditing] = useState(false);
+  const index = text === "{coverTitleTop}" ? 0 : 1;
+  const lines = textCoverLines(ctx.coverTitle);
+  const change = (value: string) => {
+    const next = lines.map((line, i) => i === index ? value : line);
+    ctx.coverEdit?.onTitle?.(next.join("\n"));
+  };
+  const style: CSSProperties = { display: "block", width: "100%", height: "100%", boxSizing: "border-box", font: "inherit", color: "inherit", textAlign: "center", padding: 0 };
+  return editing ? <textarea autoFocus aria-label={index === 0 ? "표지 위 제목" : "표지 아래 제목"} maxLength={Math.max(0, 100 - lines[1 - index].length - 1)} value={lines[index]} onChange={e => change(e.target.value)} onBlur={() => setEditing(false)} onKeyDown={e => { if (e.key === "Escape") setEditing(false); }} style={{ ...style, border: "1px solid #4067a0", background: "#ffffff55", outline: "none", resize: "none" }} /> : <span role="button" tabIndex={0} aria-label="더블클릭하여 표지 제목 수정" title="더블클릭하여 제목 수정" onDoubleClick={() => setEditing(true)} onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setEditing(true); } }} style={{ ...style, cursor: "text" }}>{lines[index] || "제목 입력"}</span>;
+}
+
+function CoverField({ token, ctx }: { token: string; ctx: Ctx }) {
+  const [editing, setEditing] = useState(false);
   const edit = ctx.coverEdit!;
-  const [editingTitle, setEditingTitle] = useState(false);
-  if (edit.readOnlyText) {
+  const title = token === "{coverTitle}";
+  const date = token === "{date}" || token === "{dateDot}";
+  const label = title ? "표지 제목" : date ? "기념일" : "받으시는 분 성함";
+  const value = title ? ctx.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로." : date ? ctx.date : ctx.name;
+  const change = (value: string) => title ? edit.onTitle?.(value) : date ? edit.onDate(value) : edit.onName(value);
+  const style: CSSProperties = { font: "inherit", color: "inherit", textAlign: "inherit", lineHeight: "inherit", letterSpacing: "inherit", padding: 0, border: 0, borderRadius: 0, background: "transparent", boxSizing: "border-box", maxWidth: "100%" };
+  if (!editing) return <span role="button" tabIndex={0} aria-label={label + " 수정"} onDoubleClick={() => setEditing(true)} onKeyDown={e => { if(e.key === "Enter" || e.key === " ") { e.preventDefault(); setEditing(true); } }} style={{ cursor: "text" }}>{fill(token, ctx)}</span>;
+  const common = { autoFocus: true, value, "aria-label": label, onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => change(e.target.value), onBlur: () => setEditing(false), onKeyDown: (e: React.KeyboardEvent) => { if(e.key === "Escape" || (!title && e.key === "Enter")) setEditing(false); } };
+  return title ? <textarea {...common} maxLength={100} style={{ ...style, width: "100%", height: "100%", resize: "none", outline: "1px solid #4067a0" }} /> : <input {...common} type={date ? "date" : "text"} min={date ? edit.minDate : undefined} maxLength={date ? undefined : 12} style={{ ...style, width: "100%", outline: "1px solid #4067a0" }} />;
+}
+
+function CoverText({ text, ctx }: { text: string; ctx: Ctx }) {
+  if (ctx.coverEdit?.readOnlyText) {
     const display = text.replaceAll("{name}", ctx.name).replaceAll("{date}", ctx.date ? formatDate(ctx.date, ". ") : "").replaceAll("{dateDot}", ctx.date ? formatDate(ctx.date, ".") : "");
     return <>{fill(display, ctx)}</>;
   }
-  if (text === "{coverTitle}") {
-    return editingTitle ? <textarea autoFocus aria-label="표지 제목" maxLength={100} value={ctx.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로."} onChange={(e) => edit.onTitle?.(e.target.value)} onBlur={() => setEditingTitle(false)} style={{ width: "100%", height: "100%", font: "inherit", color: "inherit", background: "transparent", border: "1px solid #4067a0", resize: "none" }} /> : <span className="cover-title-edit" onDoubleClick={() => setEditingTitle(true)}>
-      <span>{fill(text, ctx)}</span>
-      <button className="cover-title-edit__hint" type="button" onClick={() => setEditingTitle(true)} aria-label="표지 제목 수정">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z" /></svg>
-        더블클릭하여 제목 수정
-      </button>
-    </span>;
-  }
-  const parts = text.split(/(\{name\}|\{date\}|\{dateDot\})/);
-  return (
-    <>
-      {parts.map((part, i) => {
-        if (part === "{name}")
-          return (
-            <input
-              key={i}
-              className="tp-edit tp-edit--name"
-              value={ctx.name}
-              maxLength={12}
-              placeholder="받으시는 분 성함"
-              onChange={(e) => edit.onName(e.target.value)}
-              aria-label="받으시는 분 성함"
-            />
-          );
-        if (part === "{date}" || part === "{dateDot}")
-          return (
-            <input
-              key={i}
-              className="tp-edit tp-edit--date"
-              type="date"
-              min={edit.minDate}
-              value={ctx.date}
-              onChange={(e) => edit.onDate(e.target.value)}
-              aria-label="기념일"
-            />
-          );
-        return <span key={i}>{fill(part, ctx)}</span>;
-      })}
-    </>
-  );
+  return <>{text.split(/(\{coverTitle\}|\{name\}|\{date\}|\{dateDot\})/).map((part, i) =>
+    ["{coverTitle}", "{name}", "{date}", "{dateDot}"].includes(part) ? <CoverField key={i} token={part} ctx={ctx} /> : <span key={i}>{fill(part, ctx)}</span>
+  )}</>;
 }
 
 // 칸을 넘치면 글자를 5%씩 줄인다 (최소 65%).

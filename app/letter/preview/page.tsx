@@ -76,6 +76,7 @@ export default function PreviewPage() {
           <Link className="link-btn" href="/letter/interview">
             ← 편지 고치기
           </Link>
+          <div className="preview-actions__row">
           <Link className="link-btn" href="/letter/share">
             인스타그램용 사진 받기
           </Link>
@@ -91,6 +92,7 @@ export default function PreviewPage() {
           >
             이대로 편지 완성하기 ♥
           </button>
+          </div>
         </div>
       </div>
     </main>
@@ -135,7 +137,7 @@ function Page({ draft, page, editing, setEditing }: { draft: Draft; page: PageSp
           design={draft.design}
           size={draft.bookSize}
           recipientName={draft.recipientName}
-          coverTitle={draft.coverTitle} anniversaryDate={draft.anniversaryDate}
+          coverType={draft.coverType} coverTitle={draft.coverTitle} anniversaryDate={draft.anniversaryDate}
           coverEdit={
             page.kind === "cover"
               ? {

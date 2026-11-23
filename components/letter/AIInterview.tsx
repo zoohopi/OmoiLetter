@@ -7,21 +7,43 @@ import TipsStory from "./TipsStory";
 
 type Turn = { question: string; answer: string };
 // 한 통으로 모은 편지를 300자 기준으로 나눈다. 마지막에 남는 짧은 글은 앞 장에 붙인다(700자 → 300 + 400).
-const PAGE_CHARS = 300;
-function splitPages(text: string) {
+const PAGE_CHARS = 300, LINE_CHARS = 20; // 한 장 ≈ 300자, 한 줄 ≈ 20자
+// 줄바꿈(Enter)은 그 줄의 남은 칸을 모두 차지한다고 보고 센다. Enter를 여러 번 치면 글이 다음 장으로 넘어간다.
+function pageLimit(text: string) {
+  let cost = 0, col = 0;
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "\n") { cost += LINE_CHARS - col; col = 0; } else { cost++; col = (col + 1) % LINE_CHARS; }
+    if (cost > PAGE_CHARS) return i;
+  }
+  return text.length;
+}
+export function splitPages(text: string) {
   const pages: string[] = [];
   let rest = text.trim();
-  for (let n = Math.max(1, Math.floor(rest.length / PAGE_CHARS)); n > 1; n--) {
-    const space = Math.max(rest.lastIndexOf("\n", PAGE_CHARS), rest.lastIndexOf(" ", PAGE_CHARS));
-    const cut = space > PAGE_CHARS * .7 ? space : PAGE_CHARS; // 가능하면 띄어쓰기/줄바꿈에서 자른다
+  for (let limit = pageLimit(rest); limit < rest.length; limit = pageLimit(rest)) {
+    const space = Math.max(rest.lastIndexOf("\n", limit), rest.lastIndexOf(" ", limit));
+    const cut = space > limit * .7 ? space : limit; // 가능하면 띄어쓰기/줄바꿈에서 자른다
     pages.push(rest.slice(0, cut).trim()); rest = rest.slice(cut).trim();
   }
   pages.push(rest);
   return pages;
 }
 
+// 고친 장만 확인해서, 넘친 글만 다음 장 앞으로 보낸다. 다른 장의 구분은 그대로 둔다.
+function reflow(list: string[], from: number) {
+  const out = [...list];
+  for (let i = from; i < out.length; i++) {
+    const parts = splitPages(out[i]);
+    if (parts.length < 2) break;
+    out[i] = parts[0];
+    const rest = parts.slice(1).join(" ");
+    if (i + 1 < out.length) out[i + 1] = out[i + 1] ? rest + " " + out[i + 1] : rest; else out.push(rest);
+  }
+  return out.filter((pg, n) => n === 0 || pg.trim());
+}
+
 export default function AIInterview({ question, onSave, onClose, onSelfQuestion, initialProgress }: {
-  initialProgress?: InterviewProgress; question: string; onSelfQuestion: () => void; onSave: (letters: Turn[], paper: 1 | 2 | 3) => void; onClose: () => void;
+  initialProgress?: InterviewProgress; question: string; onSelfQuestion: () => void; onSave: (letters: (Turn & { paper: 1 | 2 | 3 })[], paper: 1 | 2 | 3) => void; onClose: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const pending = useRef(false);
@@ -29,7 +51,8 @@ export default function AIInterview({ question, onSave, onClose, onSelfQuestion,
   const cardPointer = useRef<{x:number;y:number}|null>(null);
   const savedSteps = useRef<Record<number, { question: string; answer: string; choices: string[] }>>(initialProgress?.savedSteps ?? {});
   const [showDeck, setShowDeck] = useState(false);
-  const [paper, setPaper] = useState<1 | 2 | 3 | null>(initialProgress?.paper ?? null); // 편지 속지
+  const [paper, setPaper] = useState<1 | 2 | 3 | null>(initialProgress?.paper ?? 1); // 편지 속지 (첫 장 기준, 진행 저장용)
+  const [pagePapers, setPagePapers] = useState<(1 | 2 | 3)[]>([]); // 장별 속지
   const [full, setFull] = useState<string | null>(null); // 전체 확인에서 고친 한 통의 편지
   // 2장에 들어올 때마다 "인터뷰 질문" 버튼을 알려 주는 안내
   const [deckCoach, setDeckCoach] = useState(true); // AI 질문 카드는 버튼을 눌러야 펼친다
@@ -46,7 +69,27 @@ export default function AIInterview({ question, onSave, onClose, onSelfQuestion,
   const guideIndex = stage === "from" || stage === "options" || stage === "final" ? 5 : Math.min(turns.length, 4);
   const letterText = polished ?? [turns[0] ? `To. ${turns[0].answer}` : answer ? `To. ${answer}` : "To.", ...turns.slice(1).map((turn) => turn.answer), ...(turns.length && answer.trim() ? [answer.trim()] : []), ...((stage === "options" || stage === "final" || from.trim()) ? [`From. ${from}`] : [])].join("\n\n");
   const fullLetter = full ?? [turns[0] ? `To. ${turns[0].answer}` : "", ...turns.slice(1).map(turn => turn.answer), from.trim() ? `From. ${from.trim()}` : ""].filter(Boolean).join("\n\n");
-  const pages = splitPages(fullLetter);
+  // 속지 화면에서 고친 내용 되돌리기 (Ctrl+Z). 0.6초 안의 연속 입력은 한 번으로 묶는다.
+  const history = useRef<{ list: string[][]; timer: ReturnType<typeof setTimeout> | null }>({ list: [], timer: null });
+  const [pageList, setPageList] = useState<string[] | null>(null); // 속지 화면에서 사용자가 정한 장 구분
+  const editPage = (i: number, text: string) => {
+    const next = reflow(pages.map((pg, n) => n === i ? text : pg), i);
+    const h = history.current;
+    if (!h.timer) h.list.push(pages); else clearTimeout(h.timer);
+    h.timer = setTimeout(() => { h.timer = null; }, 600);
+    setPageList(next); setFull(next.join("\n"));
+  };
+  useEffect(() => {
+    if (stage !== "paper") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.key.toLowerCase() !== "z") return;
+      const prev = history.current.list.pop(); if (prev === undefined) return;
+      e.preventDefault(); setPageList(prev); setFull(prev.join("\n"));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [stage]);
+  const pages = pageList ?? splitPages(fullLetter);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -110,7 +153,7 @@ export default function AIInterview({ question, onSave, onClose, onSelfQuestion,
     setChoices(saved?.choices ?? [previous.question]);
     setPolished(null); setStage("interview"); setError("");
   }
-  return <dialog ref={dialog} className="ai-interview" aria-label="편지 인터뷰"
+  return <dialog ref={dialog} className={`ai-interview${stage === "paper" ? " ai-interview--wide" : ""}`} aria-label="편지 인터뷰"
     onCancel={(e) => { e.preventDefault(); if (!busy && confirm("인터뷰를 닫을까요? 작성한 내용은 저장되어 다음에 이어 쓸 수 있어요.")) onClose(); }}>
     <header className="ai-interview__header">{stage === "relationship" && <h2 id="relationship-title">편지를 받는 분과 어떤 관계인가요?</h2>}<div className="ai-interview__header-actions"><button className="ai-interview__close" aria-label="인터뷰 닫기" type="button" disabled={busy} onClick={() => {
       if (confirm("인터뷰를 닫을까요? 작성한 내용은 저장되어 다음에 이어 쓸 수 있어요.")) onClose();
@@ -188,17 +231,16 @@ export default function AIInterview({ question, onSave, onClose, onSelfQuestion,
       </article>
       <div className="ai-step-navigation">
         <button type="button" className="ai-answer-back" disabled={busy} onClick={() => setStage("from")}>← 이전으로</button>
-        <button className="btn ai-answer-next" disabled={busy || !fullLetter.trim()} onClick={() => setStage("paper")}>다음으로 · 속지 고르기 <span aria-hidden="true">→</span></button>
+        <button className="btn ai-answer-next" disabled={busy || !fullLetter.trim()} onClick={() => { setPageList(null); history.current.list = []; setStage("paper"); }}>다음으로 · 속지 고르기 <span aria-hidden="true">→</span></button>
       </div>
     </section>}
 
     {stage === "paper" && <section className="ai-paper" aria-label="편지 속지 고르기">
       <h3 className="ai-letter-pages__title">편지 속지를 골라 주세요</h3>
-      <p className="ai-letter-pages__intro">마음에 드는 속지를 눌러 선택해 주세요.</p>
-      <LetterPaperPicker value={paper} onChange={setPaper}/>
+            <LetterPaperPicker intro={<p className="ai-letter-pages__intro">아래 버튼으로 속지를 바꿔 보며 골라 주세요.</p>} pages={pages} onEdit={editPage} papers={pages.map((_, i) => pagePapers[i] ?? paper ?? 1)} onChange={(i, id) => { setPagePapers(pages.map((_, n) => n === i ? id : pagePapers[n] ?? paper ?? 1)); if (i === 0) setPaper(id); }}/>
       <div className="ai-step-navigation">
         <button type="button" className="ai-answer-back" onClick={() => setStage("options")}>← 이전으로</button>
-        <button type="button" className="btn ai-answer-next" disabled={!paper} onClick={() => { if (!paper) return; finished.current = true; onSave(pages.map((page, index) => ({ question: `편지 ${index + 1}`, answer: page })), paper); }}>확인 · 편지 {pages.length}장 만들기</button>
+        <button type="button" className="btn ai-answer-next" disabled={!paper} onClick={() => { if (!paper) return; finished.current = true; onSave(pages.map((page, index) => ({ question: `편지 ${index + 1}`, answer: page, paper: pagePapers[index] ?? paper })), paper); }}>확인 · 편지 {pages.length}장 만들기</button>
       </div>
     </section>}
     {busy && stage !== "review" && <p role="status">이야기를 읽고 있어요…</p>}

@@ -12,7 +12,7 @@ import BookPage from "@/components/letter/BookPage";
 import ScaledPage from "@/components/letter/ScaledPage";
 import PhotoPages from "@/components/letter/PhotoPages";
 
-import AIInterview from "@/components/letter/AIInterview";
+import AIInterview, { splitPages } from "@/components/letter/AIInterview";
 import LetterPaperPicker from "@/components/letter/LetterPaperPicker";
 import LetterComposer from "@/components/letter/LetterComposer";
 
@@ -40,7 +40,9 @@ export default function WritePage() {
   const letters = draft.letters ?? QUESTIONS.filter((q) => draft.answers[q.id]?.trim()).map((q) => ({
     id: `letter-${q.id}`, paper:draft.letterPaper, question: q.text, answer: draft.answers[q.id], pageId: photos.some((p) => p.id === q.id) ? q.id : null,
   }));
-  const validCount = photos.length >= 9 && photos.length <= 19 && photos.every((p) => p.photoId);
+  // 사진은 최소 9장만 확인한다(최대 없음. 30장부터 가격이 오르는 건 결제 페이지에서 처리). 사진이 있는 장만 센다. 편지 전용 장(사진 없음)은 편지가 들어 있으면 괜찮다.
+  const photoPages = photos.filter((p) => p.photoId);
+  const validCount = photoPages.length >= 9 && photos.every((p) => p.photoId || draft.letters?.some((l) => l.pageId === p.id));
   // Also migrates existing photo/question work without removing its source data.
   const save = (change: Parameters<typeof updateDraft>[0]) => updateDraft((d) => {
     const base = { ...d, bookPhotos: d.bookPhotos ?? photos, letters: d.letters ?? letters };
@@ -60,11 +62,27 @@ export default function WritePage() {
     setActiveLetterId(null);
   }
 
+  const END_SLOT="__end"; // 마지막 페이지 뒤 '맨 뒤에 넣기' 칸
   function placeLetter(letterId:string,pageId:string) {
     const letter=letters.find(l=>l.id===letterId);
-    if(!letter?.question.trim()||!letter.answer.trim()||!photos.some(p=>p.id===pageId))return;
-    save(d=>({letters:d.letters!.map(l=>l.id===letterId?{...l,pageId}:l.pageId===pageId?{...l,pageId:null}:l)}));
-    const n=photos.findIndex(p=>p.id===pageId);setCursor(n);drag.setPlacingId(null);drag.setHoverId(null);
+    if(letter?.pageId===pageId)return; // 제자리에 놓으면 그대로
+    if(!letter?.question.trim()||!letter.answer.trim()||(pageId!==END_SLOT&&!photos.some(p=>p.id===pageId)))return;
+    // 편지를 놓은 자리에 편지 전용 새 장을 끼워 넣는다. 원래 그 자리의 사진(과 이후 장)은 한 장씩 뒤로 밀린다.
+    const at=pageId===END_SLOT?photos.length:photos.findIndex(ph=>ph.id===pageId);
+    const newPage=newId();
+    save(d=>{
+      const old=d.letters!.find(l=>l.id===letterId)?.pageId;
+      let pages=[...(d.bookPhotos??photos)];
+      const from=pages.findIndex(ph=>ph.id===old), to=pages.findIndex(ph=>ph.id===pageId);
+      // 옮기는 편지가 있던 편지 전용 장(사진 없음)은 비게 되므로 없앤다
+      if(old&&pages.some(ph=>ph.id===old&&!ph.photoId))pages=pages.filter(ph=>ph.id!==old);
+      // 뒤쪽 페이지로 옮길 때는 그 페이지 '다음'에, 앞쪽(또는 보관함에서)으로는 그 페이지 '앞'에 넣는다
+      const forward=from>=0&&to>from;
+      const idx=pageId===END_SLOT?pages.length:Math.max(0,pages.findIndex(ph=>ph.id===pageId))+(forward?1:0);
+      pages.splice(idx,0,{id:newPage,photoId:""});
+      return {bookPhotos:pages,letters:d.letters!.map(l=>l.id===letterId?{...l,pageId:newPage}:l)};
+    });
+    const n=at;setCursor(n);drag.setPlacingId(null);drag.setHoverId(null);
     setPlacementMessage(`내지 ${n+1}쪽에 편지를 넣었어요.`);
   }
   const writingMode = draft.writingMode;
@@ -119,7 +137,7 @@ export default function WritePage() {
           <label className="direct-letter__body"><textarea aria-label="편지 본문" placeholder="전하고 싶은 마음을 자유롭게 적어 주세요." maxLength={10000} disabled={Boolean(directBusy)} required value={direct.body} onChange={e=>changeDirect({body:e.target.value})}/></label>
           <label className="direct-letter__from">From.<input aria-label="보내는 분" placeholder="보내는 분" maxLength={200} disabled={Boolean(directBusy)} required value={direct.from} onChange={e=>changeDirect({from:e.target.value})}/></label>
         </div>
-        <section className="direct-letter__paper-pick" aria-label="편지 속지 선택"><h2>편지 속지를 골라 주세요</h2><LetterPaperPicker value={draft.letterPaper??1} onChange={paper=>save(()=>({letterPaper:paper}))}/></section>
+        <section className="direct-letter__paper-pick" aria-label="편지 속지 선택"><h2>편지 속지를 골라 주세요</h2><LetterPaperPicker papers={Array(20).fill(draft.letterPaper??1)} pages={splitPages([direct.to.trim()&&`To. ${direct.to.trim()}`,direct.body.trim()||"전하고 싶은 마음을 적으면 여기에 보여요.",direct.from.trim()&&`From. ${direct.from.trim()}`].filter(Boolean).join("\n\n"))} onChange={(_,paper)=>save(()=>({letterPaper:paper}))}/></section>
         <div className="ai-answer-tools" aria-label="편지 다듬기" aria-busy={Boolean(directBusy)}>
           <button type="button" disabled={Boolean(directBusy) || !direct.body.trim()} onClick={()=>void refineDirect("edit")}>✧ {directBusy === "edit" ? "작가가 다듬고 있어요…" : "AI 작가 첨삭"}</button>
           <button type="button" disabled={Boolean(directBusy) || !direct.body.trim()} onClick={()=>void refineDirect("spelling")}>✓ {directBusy === "spelling" ? "맞춤법을 확인하고 있어요…" : "맞춤법 검사"}</button>
@@ -147,9 +165,10 @@ export default function WritePage() {
       <p className="letter-drop-help">작성한 편지지를 아래 원하는 페이지로 끌어다 놓아 주세요.</p>
       <div className="letter-placement-work">
         <aside className="letter-tray" aria-label="내 편지 보관함">
-          <div className="letter-tray__header"><span className="letter-tray__envelope" aria-hidden="true">✉</span><span>뽑아 둔 마음<small>MY LITTLE LETTERS</small></span><span className="letter-tray__count">{letters.length}</span></div>
+          <div className="letter-tray__header"><span className="letter-tray__envelope" aria-hidden="true">✉</span><span>뽑아 둔 마음<small>MY LITTLE LETTERS</small></span><span className="letter-tray__count">{letters.filter(l=>!l.pageId).length}</span></div>
           <p className="letter-tray__hint">한 장씩, 마음을 옮겨요.</p>
           <div className="chosen-letters__list">{letters.map((letter,i)=>{
+          if(letter.pageId) return null; // 배치한 편지는 보관함에서 뺀다
           const complete=Boolean(letter.question.trim()&&letter.answer.trim());
           return <article className={`chosen-letter chosen-letter--sheet ${letter.pageId?"is-placed":""} ${drag.placingId===letter.id?"is-dragging":""}`} key={letter.id}
             draggable={false} onDragStart={e=>e.preventDefault()}
@@ -169,12 +188,15 @@ export default function WritePage() {
                   design={draft.design} size={draft.bookSize} recipientName={draft.recipientName} anniversaryDate={draft.anniversaryDate} /></ScaledPage>}
               </div>
             </button>
+            {/* 터치 기기 전용: 넣기 → 페이지 탭 (CSS에서 pointer:coarse일 때만 보임) */}
+            <button type="button" className="chosen-letter__tap-place" disabled={!complete} aria-pressed={drag.placingId===letter.id}
+              onClick={()=>{const on=drag.placingId===letter.id;drag.setPlacingId(on?null:letter.id);setPlacementMessage(on?"":"편지를 넣을 페이지를 눌러 주세요.");}}>{drag.placingId===letter.id?"선택됨":"넣기"}</button>
             <div className="chosen-letter__placement">
               <button type="button" className="letter-drag-handle" aria-label={`편지 ${i+1} 드래그`} disabled={!complete}
                 onPointerDown={e=>drag.start(e,letter.id)} onPointerMove={drag.move} onPointerUp={e=>drag.end(e)} onPointerCancel={e=>drag.end(e,true)}><span className="letter-grip" aria-hidden="true">{Array.from({length:6},(_,n)=><i key={n}/>)}</span>살짝 잡아 옮기기</button>
             </div>
             <div className="chosen-letter__bottom-row">
-              <span className="chosen-letter__status">{letter.pageId?`${photos.findIndex(p=>p.id===letter.pageId)+1}쪽에 배치됨`:complete?"아직 배치 전":"이어서 작성하기"}</span>
+              <span className="chosen-letter__status">{letter.pageId?`${photos.findIndex(p=>p.id===letter.pageId)+1}쪽에 배치됨`:complete?"":"이어서 작성하기"}</span>
               {letter.pageId && <button type="button" className="chosen-letter__remove" aria-label={`편지 ${i+1} 페이지 배치 해제`} title="편지를 빼고 사진 페이지로 되돌리기" onClick={() => {
                 save(d => ({ letters:d.letters!.map(item => item.id === letter.id ? {...item,pageId:null} : item) }));
                 drag.setPlacingId(null); drag.setHoverId(null);
@@ -186,14 +208,19 @@ export default function WritePage() {
         <section className={`letter-book-preview ${drag.placingId?"is-placing":""}`} aria-label="편지 넣을 페이지">
           <h2>편지 넣을 페이지</h2>
           <p className="letter-drop-status" role="status">{placementMessage||"원하는 페이지 위에 편지지를 놓아 주세요."}</p>
+          {drag.placingId && !drag.ghost && <div className="letter-tap-bar" role="status"><span>편지를 넣을 페이지를 눌러 주세요</span><button type="button" onClick={()=>{drag.setPlacingId(null);setPlacementMessage("");}}>취소</button></div>}
           <PhotoPages draft={{...draft,bookPhotos:photos,letters}} index={cursor} onSelect={setCursor} editable={false}
-            placingLetterId={drag.placingId} dropPageId={drag.hoverId} onPlaceLetter={placeLetter} onDropHover={drag.setHoverId} />
+            placingLetterId={drag.placingId} dropPageId={drag.hoverId} onPlaceLetter={placeLetter} onDropHover={drag.setHoverId}
+            letterGrab={{ start: (e, pageId) => { const l = letters.find(x => x.pageId === pageId); if (l) drag.start(e, l.id); }, move: drag.move, end: drag.end }}
+            onRemoveLetter={pageId => { save(d => ({ bookPhotos: (d.bookPhotos ?? photos).filter(ph => ph.id !== pageId || ph.photoId), letters: d.letters!.map(l => l.pageId === pageId ? { ...l, pageId: null } : l) })); setPlacementMessage("편지를 페이지에서 빼서 보관함으로 돌려놓았어요."); }} />
+          <div className={`letter-end-slot${drag.hoverId===END_SLOT?" is-drop-target":""}`} data-letter-drop-id={END_SLOT} role="button" tabIndex={drag.placingId?0:-1}
+            onClick={()=>{if(drag.placingId)placeLetter(drag.placingId,END_SLOT);}}>＋ 맨 뒤에 넣기</div>
         </section>
       </div>
     </section>}
     {drag.ghost && createPortal(<div className="letter-drag-ghost letter-drag-ghost--cute" style={{left:drag.ghost.x+12,top:drag.ghost.y-30}}><span>“</span>{letters.find(l=>l.id===drag.ghost?.id)?.question}</div>,document.body)}
     {aiQuestion && <AIInterview initialProgress={draft.interviewProgress} question={aiQuestion} onSelfQuestion={() => { setAiQuestion(null); addLetter(""); }} onClose={() => setAiQuestion(null)} onSave={(pages, paper) => {
-      save((d) => ({ letters: [...d.letters!, ...pages.map(page => ({ id:newId(), question:page.question, answer:page.answer, paper, pageId:null }))], step: "letters", letterPaper: paper, interviewProgress: undefined }));
+      save((d) => ({ letters: [...d.letters!, ...pages.map(page => ({ id:newId(), question:page.question, answer:page.answer, paper:page.paper, pageId:null }))], step: "letters", letterPaper: paper, interviewProgress: undefined }));
       setAiQuestion(null);
       router.push("/letter/letters");
     }} />}

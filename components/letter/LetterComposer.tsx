@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { MAX_ANSWER_LENGTH } from "@/lib/letter/rules";
 import type { Draft } from "@/lib/letter/types";
+import BookPage from "./BookPage";
+import ScaledPage from "./ScaledPage";
 
 type Letter = NonNullable<Draft["letters"]>[number];
 export default function LetterComposer({ letter, change, close, remove }: { letter: Letter; change: (patch: Partial<Letter>) => void; close: () => void; remove: () => void }) {
@@ -11,7 +13,12 @@ export default function LetterComposer({ letter, change, close, remove }: { lett
   useEffect(()=>{const el=dialog.current;if(!el)return;el.showModal();const before=document.body.style.overflow;document.body.style.overflow="hidden";return()=>{el.close();document.body.style.overflow=before;};},[]);
   return <dialog className="letter-composer letter-composer--book" ref={dialog} aria-labelledby="letter-composer-title" onCancel={e=>{e.preventDefault();close();}}>
     <div className="letter-composer__top"><span id="letter-composer-title">한 페이지의 질문과 답변</span><button type="button" aria-label="편지지 닫기" onClick={close}>닫기 ×</button></div>
-    <div className="letter-writing-sheet">
+    {letter.answer.trim() ? <div className="letter-composer__stationery">
+      {/* 완성된 편지는 고른 속지 레이아웃 그대로 보여준다. 본문은 더블클릭, To.는 클릭해서 고친다. */}
+      <ScaledPage><BookPage page={{kind:"leaf",side:"left",layout:"portrait",no:1,photoId:null,question:letter.question,answer:letter.answer,photoPage:true,letterPaper:letter.paper??1}} size="8x8" recipientName="" anniversaryDate=""
+        textEdit={{onQuestion:v=>change({question:v}),onChange:v=>change({answer:v}),maxLength:MAX_ANSWER_LENGTH,placeholder:"마음을 천천히 적어 주세요."}}/></ScaledPage>
+      <p className="letter-composer__hint">더블클릭해서 텍스트를 고칠 수 있어요.</p>
+    </div> : <div className="letter-writing-sheet">
       <span className="letter-writing-sheet__brand">A Letter for You</span>
       <span className="letter-writing-sheet__quote" aria-hidden="true">“</span>
       <label className="letter-writing-sheet__question">질문
@@ -21,8 +28,8 @@ export default function LetterComposer({ letter, change, close, remove }: { lett
         <textarea aria-label="편지지 내용" value={letter.answer} maxLength={MAX_ANSWER_LENGTH} autoFocus={Boolean(letter.question)} placeholder="마음을 천천히 적어 주세요." onChange={e=>change({answer:e.target.value})} />
       </label>
       <span className="letter-writing-sheet__footer">OMOI LETTER</span>
-    </div>
-    <div className="letter-composer__bottom"><button type="button" className="letter-composer__delete" onClick={()=>setConfirming(true)}>편지 삭제</button><p>{letter.answer.length} / {MAX_ANSWER_LENGTH}자 · 자동 저장</p><button className="btn btn--small" type="button" disabled={!letter.question.trim()||!letter.answer.trim()} onClick={close}>작성 완료 · 뽑아 둔 편지지로</button></div>
+    </div>}
+    <div className="letter-composer__bottom"><button type="button" className="letter-composer__delete" onClick={()=>setConfirming(true)}>편지 삭제</button><p>{letter.answer.length} / {MAX_ANSWER_LENGTH}자 · 자동 저장</p><button className="btn btn--small letter-composer__done" type="button" disabled={!letter.question.trim()||!letter.answer.trim()} onClick={close}>작성 완료</button></div>
     {confirming && <div className="letter-confirm" role="alertdialog" aria-modal="true" aria-labelledby="letter-confirm-title">
       <div className="letter-confirm__box">
         <p id="letter-confirm-title"><b>이 편지를 삭제할까요?</b><br />삭제한 편지는 되돌릴 수 없어요.{letter.pageId ? " 페이지에 넣어 둔 편지도 함께 빠져요." : ""}</p>

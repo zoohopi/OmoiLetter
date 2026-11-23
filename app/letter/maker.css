@@ -1653,3 +1653,76 @@
 .text-cover__brand { margin: 12mm 0 0; padding-top: 5mm; border-top: .3mm solid currentColor; font-size: 3.6mm; letter-spacing: .3em; opacity: .7; }
 .ai-paper__slot > b { color: #fff; }
 .ai-paper > .ai-letter-pages__title { color: #fff; }
+.paper-pick { display: grid; gap: 20px; width: 100%; }
+.paper-pick__pages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.paper-pick__page { display: grid; gap: 6px; justify-items: center; }
+.paper-pick__page .scaled { width: 100%; box-shadow: 0 2px 8px #00000024; }
+.paper-pick__page small { color: #fff; opacity: .8; }
+.paper-pick__pages--1 { grid-template-columns: minmax(0, 420px); justify-content: center; }
+.paper-pick__pages--2 { grid-template-columns: repeat(2, 1fr); }
+.paper-pick__page { padding: 0; border: 0; background: none; font: inherit; cursor: pointer; }
+.paper-pick__page .scaled { outline: 3px solid transparent; outline-offset: 3px; transition: outline-color .2s; }
+.paper-pick__page.is-selected .scaled { outline-color: #fff; }
+.paper-pick__page .scaled { outline: 4px solid transparent; outline-offset: 4px; border-radius: 2px; }
+.paper-pick__page:hover .scaled { outline-color: #c9b3ff66; }
+.paper-pick__page.is-selected .scaled { outline-color: #c9b3ff; box-shadow: 0 0 0 4px #c9b3ff, 0 6px 20px #c9b3ff80; }
+.paper-pick__page.is-selected small { color: #c9b3ff; opacity: 1; font-weight: 700; }
+.ai-interview.ai-interview--wide { width: min(880px, calc(100vw - 32px)); max-height: 94svh; }
+.paper-pick__one { display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; align-items: center; gap: 12px; }
+.paper-pick__one .paper-pick__page { width: 100%; max-width: 640px; justify-self: center; cursor: default; }
+.paper-pick__nav { width: 44px; height: 44px; border: 1px solid currentColor; border-radius: 50%; background: none; color: inherit; font-size: 26px; line-height: 1; cursor: pointer; }
+.paper-pick__nav:disabled { opacity: .25; cursor: default; }
+.paper-pick .layout-pick button { border: 1px solid #695974; background: #fff; color: #695974; opacity: 1; }
+.paper-pick .layout-pick button[aria-pressed="true"] { background: #695974; color: #fff; border-color: #695974; }
+/* 편지지 버튼 = AI 작가 첨삭/맞춤법 검사 버튼과 같은 모양 */
+.paper-pick .layout-pick { gap: 10px; }
+.paper-pick .layout-pick button { display: inline-flex; align-items: center; min-height: 0; border: 1px solid #4067A033; border-radius: 24px; padding: 10px 17px; background: #f3f7fd; color: #4067A0; font: inherit; font-size: 14px; cursor: pointer; transition: background .18s, box-shadow .18s; }
+.paper-pick .layout-pick button:hover { background: #e5eefb; box-shadow: 0 3px 10px #4067A014; }
+.paper-pick .layout-pick button[aria-pressed="true"] { background: #4067A0; color: #fff; border-color: #4067A0; }
+
+/* Page ordering: the drop target is separate from crop editing and letter placement. */
+.photo-page[draggable="true"] { cursor:grab; }
+.photo-page.is-dragging { opacity:.45; }
+.photo-page.is-move-target { z-index:12; }
+.photo-page.is-move-target .scaled { outline:4px solid #4067a0; outline-offset:5px; box-shadow:0 0 0 9px #4067a033; }
+.photo-page-list__move-status { text-align:center; font-size:13px; min-height:1.4em; }
+.photo-page-list__move-status:empty { display:none; }
+.paper-pick__page small { order: -1; font-size: 18px; font-weight: 600; color: #695974; opacity: 1; } .paper-pick__page.is-selected small { color: #695974; }
+.paper-pick__count { margin: 0; text-align: center; font-size: 18px; font-weight: 600; color: #695974; } .paper-pick > .ai-letter-pages__intro { margin: -14px 0 0; text-align: center; }
+.paper-pick > .paper-pick__count { font-size: 24px; }
+/* 뽑아 둔 마음(편지 보관함)을 '편지 넣을 페이지' 위에 가로로 */
+.letter-placement-work { grid-template-columns: 1fr; gap: 25px; }
+.letter-tray { position: relative; top: auto; }
+.letter-placement-work .letter-tray .chosen-letters__list { display: grid; grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: 180px; justify-content: start; align-items: start; max-height: none; overflow-x: auto; overflow-y: hidden; }
+.letter-tray .chosen-letter--sheet::before, .letter-tray .chosen-letter--sheet::after { content: none; }
+.photo-page__remove-letter { margin-left: 8px; padding: 4px 12px; border: 1px solid #c0392b; border-radius: 999px; background: #fff; color: #c0392b; font: inherit; font-size: 13px; cursor: pointer; }
+/* 보관함 너비 = 아래 편지 페이지 목록(900px), 한 줄에 최대 3장, 카드 모서리 통일 */
+.letter-placement-work > .letter-tray { box-sizing: border-box; width: 100%; max-width: 900px; margin: 0 auto; }
+.letter-placement-work .letter-tray .chosen-letters__list { gap: 20px; grid-auto-columns: calc((100% - 40px) / 3); scroll-snap-type: x mandatory; }
+.letter-tray .chosen-letter--sheet { border-radius: 8px; overflow: hidden; scroll-snap-align: start; }
+.letter-tray .chosen-letter__thumbnail { border-radius: 0; }
+.photo-page:has(> .photo-page__remove-letter) { position: relative; }
+.photo-page > .photo-page__remove-letter { position: absolute; top: 10px; right: 10px; z-index: 5; margin: 0; padding: 6px 14px; border: 0; border-radius: 999px; background: #d64545; color: #fff; font-weight: 600; box-shadow: 0 2px 8px #0000002e; }
+.photo-page > .photo-page__remove-letter:hover { background: #b83232; }
+.photo-page > .photo-page__remove-letter { top: 22px; right: 22px; }
+.photo-page > .photo-page__remove-letter { width: 40px; height: 40px; padding: 0; border-radius: 50%; font-size: 22px; line-height: 1; display: grid; place-items: center; }
+.letter-composer__stationery { width: min(560px, 100%); margin: 0 auto; }
+.letter-composer__stationery .scaled { box-shadow: 0 4px 16px #00000024; }
+.letter-composer__hint { margin: 10px 0 0; text-align: center; font-size: 13px; opacity: .7; }
+.letter-composer__done.btn { min-height: 0; padding: 8px 18px; font-size: 14px; }
+/* 터치 기기 전용 '넣기 → 페이지 탭' */
+.chosen-letter__tap-place, .letter-tap-bar { display: none; }
+@media (pointer: coarse) {
+  .chosen-letter__tap-place { display: block; width: 100%; margin-top: 8px; padding: 10px; border: 1px solid #4067A0; border-radius: 999px; background: #fff; color: #4067A0; font: inherit; font-size: 15px; font-weight: 600; }
+  .chosen-letter__tap-place[aria-pressed="true"] { background: #4067A0; color: #fff; }
+  .chosen-letter__tap-place:disabled { opacity: .4; }
+  .letter-tap-bar { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-radius: 14px; background: #2c2b3e; color: #fff; box-shadow: 0 6px 20px #0000004d; }
+  .letter-tap-bar button { padding: 8px 14px; border: 1px solid #fff; border-radius: 999px; background: none; color: #fff; font: inherit; }
+  .letter-book-preview.is-placing .photo-page { outline: 2px dashed #4067A0; outline-offset: 4px; }
+}
+.letter-end-slot { box-sizing: border-box; max-width: 900px; margin: 24px auto 0; padding: 40px 16px; border: 2px dashed currentColor; border-radius: 8px; text-align: center; font-size: 16px; font-weight: 600; opacity: .55; transition: opacity .15s, background .15s; }
+.letter-book-preview.is-placing .letter-end-slot { opacity: .9; cursor: pointer; }
+.letter-end-slot.is-drop-target { opacity: 1; background: #4067a022; border-color: #4067A0; }
+
+.preview-actions__row { display:flex; align-items:center; justify-content:center; gap:20px; max-width:100%; }
+@media(max-width:480px) { .preview-actions__row { gap:12px; } .preview-actions__row .link-btn { font-size:12px; } .preview-actions__row .preview-actions__finish { padding:10px 12px; font-size:12px; } }

@@ -4,7 +4,7 @@
 import { getPhoto } from "./store";
 import { bookContent } from "./bookContent";
 import type { Draft, PhotoTransform } from "./types";
-import { designOf, photoPageDesign, PAGE_PT, type PageDesign, type TextStyle } from "./designs";
+import { designOf, photoPageDesign, PAGE_PT, TEXT_COVER_DESIGN, textCoverLines, type PageDesign, type TextStyle } from "./designs";
 
 export const IG_W = 1080;
 export const IG_H = 1350;
@@ -16,7 +16,7 @@ function canvas(w: number, h: number) {
   return c;
 }
 function family(s: TextStyle) {
-  const vars = { hand: "--font-title", serif: "--font-serif", sans: "--font-sans-kr", pre: "--font-body", arial: "" };
+  const vars = { logo: "--font-logo", hand: "--font-title", serif: "--font-serif", sans: "--font-sans-kr", pre: "--font-body", arial: "" };
   return vars[s.font] ? getComputedStyle(document.documentElement).getPropertyValue(vars[s.font]).trim() || "serif" : "Arial";
 }
 async function bitmap(url: string) {
@@ -24,11 +24,12 @@ async function bitmap(url: string) {
   if (!response.ok) throw new Error("목업을 불러오지 못했어요.");
   return createImageBitmap(await response.blob());
 }
-async function pageTexture(pd: PageDesign, draft: Draft, photoId: string, transform?: PhotoTransform, no = 0) {
+async function pageTexture(pd: PageDesign, draft: Draft, photoId: string | null, transform?: PhotoTransform, no = 0) {
   const c = canvas(SIZE, SIZE), ctx = c.getContext("2d")!;
-  const blob = await getPhoto(photoId);
-  if (!blob) throw new Error(no ? "내지 사진을 다시 넣어 주세요." : "표지 사진을 다시 넣어 주세요.");
-  const photo = await createImageBitmap(blob);
+  const needsPhoto = pd.els.some(el => el.t === "photo");
+  const blob = needsPhoto && photoId ? await getPhoto(photoId) : null;
+  if (needsPhoto && !blob) throw new Error(no ? "내지 사진을 다시 넣어 주세요." : "표지 사진을 다시 넣어 주세요.");
+  const photo = blob ? await createImageBitmap(blob) : null;
   ctx.scale(SIZE / PAGE_PT, SIZE / PAGE_PT);
   // Transparent print layer: the photographic mockup provides the paper.
   try {
@@ -36,7 +37,7 @@ async function pageTexture(pd: PageDesign, draft: Draft, photoId: string, transf
       const [x, y, right, bottom] = el.r, w = right - x, h = bottom - y;
       ctx.save();
       ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
-      if (el.t === "photo") {
+      if (el.t === "photo" && photo) {
         const t = transform ?? { scale: 1, x: 0, y: 0 };
         const fit = Math.max(w / photo.width, h / photo.height) * t.scale;
         ctx.drawImage(photo, x + w / 2 + t.x - photo.width * fit / 2, y + h / 2 + t.y - photo.height * fit / 2, photo.width * fit, photo.height * fit);
@@ -49,7 +50,7 @@ async function pageTexture(pd: PageDesign, draft: Draft, photoId: string, transf
         ctx.globalAlpha = el.opacity ?? 1; ctx.drawImage(image, x, y, w, h); image.close();
       } else if (el.t === "text") {
         // Only public design text; questions, quotes from answers and letter copy never enter the export.
-        const text = el.text.replaceAll("{coverTitle}", draft.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로.").replaceAll("{name}", draft.recipientName || "○○")
+        const text = el.text.replaceAll("{coverTitleTop}", textCoverLines(draft.coverTitle)[0]).replaceAll("{coverTitleBottom}", textCoverLines(draft.coverTitle)[1]).replaceAll("{coverTitle}", draft.coverTitle ?? "말하지 못한 마음을,\n한 권의 편지로.").replaceAll("{name}", draft.recipientName || "○○")
           .replaceAll("{dateDot}", draft.anniversaryDate.replaceAll("-", "."))
           .replaceAll("{date}", draft.anniversaryDate.replaceAll("-", ". "))
           .replace(/\{(?:no|il|ir|pl|pr)\}/g, String(no).padStart(2, "0"))
@@ -74,7 +75,7 @@ async function pageTexture(pd: PageDesign, draft: Draft, photoId: string, transf
       }
       ctx.restore();
     }
-  } finally { photo.close(); }
+  } finally { photo?.close(); }
   return c;
 }
 
@@ -129,18 +130,54 @@ async function frontComposite(texture: HTMLCanvasElement): Promise<Blob> {
   } finally { base.close(); }
 }
 
+// Photograph-backed right-hand inside page; the cover keeps its own mockup.
+async function openPageComposite(texture: HTMLCanvasElement, side: "left" | "right"): Promise<Blob> {
+  const base = await bitmap("/sample/book-renders/share/open-page-blank-v1.png");
+  try {
+    const c = canvas(IG_W, IG_H), ctx = c.getContext("2d")!;
+    ctx.save();
+    if (side === "left") { ctx.translate(IG_W, 0); ctx.scale(-1, 1); }
+    ctx.drawImage(base, 0, 0, IG_W, IG_H);
+    ctx.restore();
+    // Match the photographed page's gentle bow using narrow vertical strips.
+    const left = IG_W * (side === "left" ? 1 - .884 : .117), right = IG_W * (side === "left" ? 1 - .117 : .884);
+    const top = IG_H * .198, bottom = IG_H * .811;
+    const printed = canvas(IG_W, IG_H), ink = printed.getContext("2d")!;
+    for (let x = Math.floor(left); x < right; x++) {
+      const u = (x - left) / (right - left);
+      const arch = Math.sin(u * Math.PI);
+      const y = top - arch * IG_H * .004;
+      const end = bottom + arch * IG_H * .003;
+      ink.drawImage(texture, u * SIZE, 0, SIZE / (right - left) + .1, SIZE, x, y, 1.1, end - y);
+    }
+    // Transfer the real paper's neutral light and grain to the printed ink.
+    // RGB channels receive the same light factor so photo hues remain intact.
+    const paper = ctx.getImageData(0, 0, IG_W, IG_H).data;
+    const pixels = ink.getImageData(0, 0, IG_W, IG_H);
+    for (let i = 0; i < pixels.data.length; i += 4) {
+      if (!pixels.data[i + 3]) continue;
+      const light = Math.max(.78, Math.min(1.04, (paper[i] * .2126 + paper[i + 1] * .7152 + paper[i + 2] * .0722) / 227));
+      for (let ch = 0; ch < 3; ch++) pixels.data[i + ch] *= light;
+    }
+    ink.putImageData(pixels, 0, 0);
+    ctx.drawImage(printed, 0, 0);
+    return await new Promise<Blob>((resolve, reject) => c.toBlob(b => b ? resolve(b) : reject(new Error("이미지 저장 실패")), "image/jpeg", .95));
+  } finally { base.close(); }
+}
+
 export async function renderInstagramSlides(draft: Draft): Promise<Slide[]> {
-  if (!draft.coverPhotoId) throw new Error("표지 사진을 먼저 넣어 주세요.");
+  if (draft.coverType !== "text" && !draft.coverPhotoId) throw new Error("표지 사진을 먼저 넣어 주세요.");
   const design = designOf(draft.design);
   {
     await document.fonts.ready;
     // Cover is always first and cannot be omitted, including photo-only drafts.
-    const cover = await pageTexture({ ...design.cover, bg: "#FFFFFF" }, draft, draft.coverPhotoId, draft.coverPhotoTransform);
+    const cover = await pageTexture({ ...(draft.coverType === "text" ? TEXT_COVER_DESIGN : design.cover), bg: "#FFFFFF" }, draft, draft.coverPhotoId, draft.coverPhotoTransform);
     const slides: Slide[] = [{ name: "omoi-letter-01-cover.jpg", blob: await frontComposite(cover) }];
-    for (const [i, page] of bookContent(draft).filter(p => p.photoId).entries()) {
+    for (const [i, page] of bookContent(draft).entries()) {
+      if (!page.photoId) continue;
       const pd = photoPageDesign(draft.design, draft.photoLayout?.[page.id], false);
       const texture = await pageTexture({ ...pd, bg: "#FFFFFF" }, draft, page.photoId!, draft.photoTransforms?.[page.id], i + 1);
-      slides.push({ name: `omoi-letter-${String(i + 2).padStart(2, "0")}.jpg`, blob: await frontComposite(texture) });
+      slides.push({ name: `omoi-letter-${String(slides.length + 1).padStart(2, "0")}.jpg`, blob: await openPageComposite(texture, i % 2 === 0 ? "left" : "right") });
     }
     return slides;
   }

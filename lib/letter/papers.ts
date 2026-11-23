@@ -1,5 +1,5 @@
 export type LetterPaperId = 1 | 2 | 3;
-export const LETTER_PAPERS = [{id:1,name:"편지지 1",description:"큰 따옴표와 좌우 본문"},{id:2,name:"편지지 2",description:"넓은 여백과 두 단의 글"},{id:3,name:"편지지 3",description:"가운데 제목과 차분한 본문"}] as const;
+export const LETTER_PAPERS = [{id:1,name:"편지지 A",description:"큰 따옴표와 좌우 본문"},{id:2,name:"편지지 B",description:"넓은 여백과 두 단의 글"},{id:3,name:"편지지 C",description:"가운데 제목과 차분한 본문"}] as const;
 export function splitLetterParts(question:string, answer:string) {
   const lines=answer.replace(/\r\n/g,"\n").split("\n");
   let to="",from="";

@@ -9,8 +9,9 @@ export function mountCoverSpread(spec: { width: number; height: number; bleed: n
   const width = spec.width * 2 + spec.spine + spec.bleed * 2;
   const height = spec.height + spec.bleed * 2;
   const paper = getComputedStyle(leaves[0]).backgroundColor;
+  const anniversary = book.dataset.anniversaryDate?.replaceAll("-", ".") ?? "";
   const style = document.createElement('style');
-  style.textContent = `@page{size:${width}mm ${height}mm;margin:0}.admin-print-book{width:${width}mm!important;margin:0!important}.admin-cover-spread{display:flex;width:${width}mm;height:${height}mm;overflow:hidden;background:${paper};break-inside:avoid}.admin-cover-panel{position:relative;width:${spec.width + spec.bleed}mm;height:${height}mm;overflow:hidden;flex:none}.admin-cover-panel .bp{position:absolute!important;top:0!important;margin:0!important;break-after:auto!important}.admin-cover-spine{width:${spec.spine}mm;height:${height}mm;flex:none;position:relative;background:${paper}}.admin-cover-spine-title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg);font:400 8pt Arial,Helvetica,sans-serif;letter-spacing:1pt;white-space:nowrap;color:#695974}`;
+  style.textContent = `@page{size:${width}mm ${height}mm;margin:0}.admin-print-book{width:${width}mm!important;margin:0!important}.admin-cover-spread{display:flex;width:${width}mm;height:${height}mm;overflow:hidden;background:${paper};break-inside:avoid}.admin-cover-panel{position:relative;width:${spec.width + spec.bleed}mm;height:${height}mm;overflow:hidden;flex:none}.admin-cover-panel .bp{position:absolute!important;top:0!important;margin:0!important;break-after:auto!important}.admin-cover-spine{width:${spec.spine}mm;height:${height}mm;flex:none;position:relative;background:${paper}}.admin-cover-spine-title{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) rotate(90deg);font:400 8pt Arial,Helvetica,sans-serif;letter-spacing:1pt;white-space:nowrap;color:#695974}.admin-cover-spine-date{position:absolute;left:50%;bottom:12mm;transform:translateX(-50%) rotate(90deg);transform-origin:center;font:400 5pt Arial,Helvetica,sans-serif;white-space:nowrap;color:#695974}`;
   document.body.append(style);
   const spread = document.createElement('div');
   spread.className = 'admin-cover-spread';
@@ -28,6 +29,12 @@ export function mountCoverSpread(spec: { width: number; height: number; bleed: n
       title.className = 'admin-cover-spine-title';
       title.textContent = 'OMOILETTER';
       spine.append(title);
+      if (anniversary) {
+        const date = document.createElement('span');
+        date.className = 'admin-cover-spine-date';
+        date.textContent = anniversary;
+        spine.append(date);
+      }
       spread.append(spine);
     }
     spread.append(panel);

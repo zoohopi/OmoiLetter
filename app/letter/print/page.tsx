@@ -17,6 +17,8 @@ export default function PrintPage() {
   const inner = buildInnerPages(draft);
   const common = {
     size: draft.bookSize,
+    coverType: draft.coverType,
+    coverTitle: draft.coverTitle,
     bleed: true,
     recipientName: draft.recipientName,
     anniversaryDate: draft.anniversaryDate,

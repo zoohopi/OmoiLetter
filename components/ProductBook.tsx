@@ -253,7 +253,7 @@ export default function ProductBook() {
             if (el.t !== "text") continue;
             const [x,y,right] = el.r;
             g.fillStyle=el.s.color; g.textAlign=el.s.align ?? "left";
-            const font=el.s.font === "hand" ? hand : el.s.font === "serif" ? serif : sans;
+            const font=el.s.font === "logo" ? getComputedStyle(document.documentElement).getPropertyValue("--font-logo").trim() || sans : el.s.font === "hand" ? hand : el.s.font === "serif" ? serif : sans;
             g.font=`${el.s.weight ?? 400} ${el.s.size*scale}px ${font}`;
             const anchor=el.s.align === "center" ? (x+right)/2 : el.s.align === "right" ? right : x;
             g.fillText(el.text,anchor*scale,y*scale,(right-x)*scale);
