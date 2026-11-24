@@ -17,6 +17,7 @@ test('member isolation, revisions, immutable orders and private photos',async()=
  `);
  await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/202611040001_members_books_orders.sql'),'utf8'));
  await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/202611130001_delete_saved_books.sql'),'utf8'));
+ await db.exec(fs.readFileSync(path.join(__dirname,'../supabase/migrations/202611240001_unlimited_book_photos.sql'),'utf8'));
  const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222',book='33333333-3333-4333-8333-333333333333';
  await db.query(`insert into auth.users(id) values($1),($2)`,[a,b]);
  const as=async(id)=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[id]);await db.exec('set role authenticated')};
@@ -58,6 +59,17 @@ test('member isolation, revisions, immutable orders and private photos',async()=
  await as(b);await fails('select public.delete_my_book($1)',[disposable],'22023');
  await as(a);await db.query('select public.delete_my_book($1)',[disposable]);
  assert.equal((await db.query('select id from public.books where id=$1',[disposable])).rows.length,0);
+ // 사진 20장 + 편지만 있는 페이지도 저장·주문 가능, 빈 페이지는 거부
+ const big='55555555-5555-4555-8555-555555555555',bigPath=`${a}/${big}/photo-hash`;
+ await db.query("insert into storage.objects(bucket_id,name) values('book-photos',$1)",[bigPath]);
+ const bigDraft={...draft,status:'submitted',bookPhotos:[...Array.from({length:20},(_,i)=>({id:'p'+i,photoId:'photo1'})),{id:'only',photoId:''}],letters:[{id:'l1',question:'안부',answer:'내용',pageId:'only'}]};
+ const bigAssets={photo1:{path:bigPath,mime:'image/jpeg',size:1234}};
+ await save(0,bigDraft,big,bigAssets);
+ assert.ok((await db.query('select public.request_book_order($1,$2) id',[big,address])).rows[0].id);
+ const empty='66666666-6666-4666-8666-666666666666',emptyPath=`${a}/${empty}/photo-hash`;
+ await db.query("insert into storage.objects(bucket_id,name) values('book-photos',$1)",[emptyPath]);
+ await save(0,{...bigDraft,letters:[]},empty,{photo1:{...bigAssets.photo1,path:emptyPath}});
+ await fails('select public.request_book_order($1,$2)',[empty,address],'22023');
  console.log('Verified: migration, private storage, A/B isolation, stale revisions, frozen snapshots, idempotency, order-status write protection.');
  }finally{await db.close()}
 });

@@ -29,7 +29,7 @@ export const draftSchema = z.object({
   lateAccepted: z.boolean(), bookSize: z.enum(["4x5", "8x8"]), design: z.enum(["minimal", "magazine"]).optional(),
   answers: z.record(z.string(), z.string().max(10000)), photoByQuestion: z.record(z.string(), z.string()),
   coverPhotoId: z.string().nullable(), createdAt: z.string(), updatedAt: z.string(), submittedAt: z.string().optional(),
-  bookPhotos: z.array(z.object({ id: z.string(), photoId: z.string() })).max(19).optional(),
+  bookPhotos: z.array(z.object({ id: z.string(), photoId: z.string() })).max(500).optional(),
   letters: z.array(z.object({ id: z.string(), question: z.string().max(2000), answer: z.string().max(10000), pageId: z.string().nullable(), paper:z.union([z.literal(1),z.literal(2),z.literal(3)]).optional() })).max(500).optional(),
   photoLayout: z.record(z.string(), z.enum(["landscape", "portrait", "portrait2", "square"])).optional(),
   photoTransforms: z.record(z.string(), transform).optional(), coverPhotoTransform: transform.optional(),
