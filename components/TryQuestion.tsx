@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import VintageMicrophone from "@/components/VintageMicrophone";
 import { SamplePage } from "@/components/BookPreview";
 import type { PageSpec } from "@/components/letter/BookPage";
 
@@ -128,12 +129,13 @@ export default function TryQuestion() {
             )}
           </div>
           {!shown && (
-            <button className="btn try__start" type="button" onClick={() => {
+            <button className="try__start try__mic" type="button" onClick={() => {
               const section = letterRef.current?.closest("section");
               section?.classList.add("is-interviewing");
               setShown(true);
             }}>
-              인터뷰하기
+              <VintageMicrophone />
+              <span className="btn">인터뷰 하기</span>
             </button>
           )}
         </div>
@@ -207,5 +209,3 @@ function fly(letter: HTMLElement | null, book: HTMLElement | null) {
     src.style.transform = `translate(${(to.left - from.left) / zoom}px, ${(to.top - from.top) / zoom}px) scale(${scale})`;
   });
 }
-
-
