@@ -2488,3 +2488,15 @@ body {
 .try__start { animation: try-bounce 2.4s ease-in-out infinite; }
 .try__start:hover, .try__start:focus-visible { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) { .try__start { animation: none; } }
+
+.story-scroll__handwritten img { display:block; width:100%; height:auto; margin:0 auto; }
+
+.story-scroll__handwritten-line { display:block; width:100%; height:auto; margin:0 auto; }
+
+.story-scroll__split-handwriting { display:block; position:relative; width:100%; aspect-ratio:621 / 194; }
+.story-scroll__split-handwriting img { position:absolute; inset:0; width:100%; height:auto; }
+.story-scroll__split-handwriting-top { clip-path:inset(0 0 50% 0); transform:translateX(50px); }
+.story-scroll__split-handwriting-bottom { clip-path:inset(50% 0 0 0); }
+
+/* Home book: align both edges of every letter body. */
+.book .stationery .stationery__body { text-align:justify; text-align-last:left; }

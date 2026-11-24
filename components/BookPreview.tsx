@@ -5,6 +5,8 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import BookPage, { type PageSpec } from "@/components/letter/BookPage";
 import { designOf as sampleDesignOf } from "@/lib/letter/homeSampleDesigns";
+import { HOME_LETTER_SAMPLES } from "@/lib/letter/homeLetterSamples";
+import type { LetterPaperId } from "@/lib/letter/papers";
 import ScaledPage from "@/components/letter/ScaledPage";
 import { SAMPLE_DATE, SAMPLE_DESIGN, SAMPLE_NAME, SAMPLE_PAGES } from "@/lib/letter/sample";
 
@@ -16,6 +18,14 @@ const SHEETS: [number, number | null][] = [
   [4, 5], // 펼침 2 오른쪽 → 펼침 3 왼쪽
   [6, null], // 펼침 3 오른쪽 (마지막)
 ];
+
+const PREVIEW_PAGES = SAMPLE_PAGES.map((page): PageSpec => {
+  if (page.kind !== "leaf") return page;
+  const layout = sampleDesignOf(SAMPLE_DESIGN).layouts.find(layout => layout.id === page.layout);
+  if (!layout || page.side === layout.photoSide) return page;
+  const paper = page.no as LetterPaperId;
+  return { ...page, ...HOME_LETTER_SAMPLES[paper], letterPaper: paper };
+});
 
 // p.06 — 실제 편지책과 같은 템플릿·매거진 디자인으로 그린 샘플 한 권 (lib/letter/sample.ts)
 export default function BookPreview() {
@@ -99,10 +109,10 @@ export default function BookPreview() {
             {SHEETS.map(([face, back], i) => (
               <div key={i} className={`${cls(i)} ${i === 0 ? "book__cover" : ""}`} aria-hidden={page !== i}>
                 <div className="book__face book__face--tpl">
-                  <SamplePage page={SAMPLE_PAGES[face]} />
+                  <SamplePage page={PREVIEW_PAGES[face]} />
                 </div>
                 <div className="book__reverse book__face--tpl" aria-hidden="true">
-                  {back !== null && <SamplePage page={SAMPLE_PAGES[back]} />}
+                  {back !== null && <SamplePage page={PREVIEW_PAGES[back]} />}
                 </div>
               </div>
             ))}
