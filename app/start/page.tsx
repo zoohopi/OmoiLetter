@@ -22,6 +22,7 @@ export default function StartPage() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [lateClosedFor, setLateClosedFor] = useState("");
   const [photoMode, setPhotoMode] = useState<"image" | null>(null);
 
   useEffect(() => {
@@ -73,12 +74,14 @@ export default function StartPage() {
   const nights = hasDate ? nightsUntil(draft.anniversaryDate) : 0;
   const past = hasDate && nights >= 0 && isPastDeadline(draft.anniversaryDate);
   const textCover = draft.coverType === "text";
+  const titleEdited = Boolean(draft.coverTitle?.trim()) && draft.coverTitle !== "말하지 못한 마음을,\n한 권의 편지로.";
   const todo = [
     { done: textCover || Boolean(draft.coverPhotoId), text: textCover ? "텍스트 표지로 만들어요." : "사진을 눌러 표지 사진을 정해 주세요." },
-    { done: true, text: "원하시는 제목이 있다면 수정해주세요." },
+    { done: titleEdited, text: "원하시는 제목이 있다면 수정해주세요.", optional: true },
     { done: hasDate && nights >= 0, text: "기념일은 언제인가요? 날짜를 눌러 골라 주세요." },
   ];
-  const ready = todo.every((t) => t.done) && (!past || draft.lateAccepted);
+  const latePopup = past && !draft.lateAccepted && lateClosedFor !== draft.anniversaryDate;
+  const ready = todo.every((t) => t.done || "optional" in t) && (!past || draft.lateAccepted);
 
   return (
     <>
@@ -87,6 +90,8 @@ export default function StartPage() {
         <div className="maker__inner">
           <p className="eyebrow">STEP 1 · 디자인과 표지</p>
           <h1 className="maker__title">어떤 책으로 마음을 전할까요</h1>
+          <div className="start-layout">
+          <div className="start-main">
           <section className="start-design-choice" aria-label="책 디자인 선택">
             <div className="layout-pick" role="group" aria-label="책 디자인">
               {DESIGN_LIST.map((d) => (
@@ -130,6 +135,15 @@ export default function StartPage() {
             {!textCover && draft.coverPhotoId && <PhotoTools draft={draft} scope="cover" mode={photoMode} setMode={setPhotoMode} />}
 
           </div>
+          </div>
+          <div className="start-side">
+          <ul className="start-todo">
+            {todo.map((t) => (
+              <li key={t.text} className={t.done ? "is-done" : ""}>
+                {t.text}
+              </li>
+            ))}
+          </ul>
           <section className="start-cover-fields" aria-labelledby="cover-details-heading">
             <h2 id="cover-details-heading">표지에 담을 내용을 적어 주세요</h2>
             <p>입력한 내용이 위 표지에 바로 반영돼요.</p>
@@ -140,18 +154,25 @@ export default function StartPage() {
             <label htmlFor="cover-anniversary">기념일</label>
             <input id="cover-anniversary" type="date" min={todayString()} value={draft.anniversaryDate} onChange={e => updateDraft(() => ({ anniversaryDate:e.target.value, lateAccepted:false }))} />
           </section>
-          <ul className="start-todo">
-            {todo.map((t) => (
-              <li key={t.text} className={t.done ? "is-done" : ""}>
-                {t.text}
-              </li>
-            ))}
-          </ul>
+          </div>
+          </div>
 
           {error && <p className="ph-error">{error}</p>}
 
 
           {hasDate && nights < 0 && <p className="notice">지난 날짜예요. 다가오는 기념일을 골라 주세요.</p>}
+          {latePopup && (
+            <div className="late-popup" role="dialog" aria-modal="true" aria-labelledby="late-popup-title">
+              <div className="late-popup__card">
+                <b id="late-popup-title">이번 기념일 전에 닿기는 어려울 것 같아요.</b>
+                <p>편지를 완성한 뒤 제작과 배송이 4일 걸려요.<br />그래도 마음은 늦지 않았어요.</p>
+                <div className="late-popup__actions">
+                  <button className="btn" type="button" autoFocus onClick={() => updateDraft(() => ({ lateAccepted: true }))}>기념일 이후 도착해도 괜찮아요</button>
+                  <button className="btn btn--ghost" type="button" onClick={() => setLateClosedFor(draft.anniversaryDate)}>날짜 다시 고를게요</button>
+                </div>
+              </div>
+            </div>
+          )}
           {past && (
             <div className="notice">
               <b>이번 기념일 전에 닿기는 어려울 것 같아요.</b>

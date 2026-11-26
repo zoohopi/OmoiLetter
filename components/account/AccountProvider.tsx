@@ -48,7 +48,7 @@ export default function AccountProvider({ children }: { children: ReactNode }) {
   }, [user]);
   useEffect(() => {
     if (!user || !draft || blocked.current || saving || draft.cloudSavedAt === draft.updatedAt) return;
-    const timer = setTimeout(() => void saveNow(), 1600);
+    const timer = setTimeout(() => void saveNow(), 5000);
     return () => clearTimeout(timer);
   }, [user, draft, saving, saveNow]);
   const signOut = async () => {

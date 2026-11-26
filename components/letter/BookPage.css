@@ -132,7 +132,7 @@
 .stationery__to { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .stationery__to.is-editable { cursor: text; }
 .stationery__to.is-editable:hover { background: #4067a014; }
-.stationery__to input { width: 100%; height: 100%; box-sizing: border-box; border: 0; outline: calc(var(--pt) * 1) solid #4067A0; background: #fff; font: inherit; color: inherit; }
+.stationery__to input { width: 100%; height: 100%; box-sizing: border-box; border: 1px solid #ed913f; outline: none; background: #fff; font: inherit; color: inherit; }
 .stationery--1 .stationery__content .stationery__closing { margin-top: calc(var(--pt) * 36); }
 .stationery--2 .stationery__content .stationery__closing { margin-top: calc(var(--pt) * 14); break-inside: avoid; text-align: right; }
 .stationery--3 .stationery__to, .stationery--3 > .stationery__salutation, .stationery--3 .stationery__closing { text-align: center; }

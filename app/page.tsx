@@ -1,3 +1,4 @@
+import HomeMusic from "@/components/HomeMusic";
 import Link from "next/link";
 import Topbar from "@/components/Topbar";
 import Reveal from "@/components/Reveal";
@@ -24,6 +25,7 @@ export default function Home() {
       <Topbar />
 
       <main className="omoi-home">
+        <HomeMusic />
         {/* HERO — 맨 첫 화면: 사진·영상만 (글자 없음). 영상이 나오면 이 자리에 넣는다 */}
         <section id="hero" className="hero" aria-label="Omoi Letter">
           <div className="hero__media" aria-hidden="true" />
@@ -31,7 +33,8 @@ export default function Home() {
           <div className="hero__media hero__media--rose" aria-hidden="true" />
           <div className="hero__media hero__media--sky" aria-hidden="true" />
           <p className="hero__cue" aria-hidden="true">
-            <span />
+            <span className="hero__mouse"><i /></span>
+            <em>scroll</em>
           </p>
         </section>
 
@@ -150,12 +153,10 @@ export default function Home() {
             <Reveal className="center">
               <p className="eyebrow">p.06</p>
               <h2 className="headline">
-                책으로 주문 전에<br />사진으로 먼저 만나보세요
+                무료로 미리보기 책을 만들어보세요.
               </h2>
               <p className="lead">
-                실제 책으로 구매전 인스타그램 공유용을<span className="share-description-break"><br /></span><span className="share-description-space"> </span>무료로 전달드려요.
-                <br />
-                <strong>편지는 담지 않고, 표지와 사진만 보여줘요.</strong>
+                구매 전 인스타그램에 공유하실 수 있게<br />미리보기 책 무료로 전달드려요.
               </p>
             </Reveal>
 

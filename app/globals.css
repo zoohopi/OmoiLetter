@@ -2491,7 +2491,15 @@ body {
 
 .story-scroll__handwritten img { display:block; width:100%; height:auto; margin:0 auto; }
 
-.story-scroll__handwritten-line { display:block; width:100%; height:auto; margin:0 auto; }
+.story-scroll__handwritten-line {
+  display: block;
+  position: relative;
+  left: 50%;
+  width: min(173.5%, 125vw);
+  max-width: none;
+  height: auto;
+  transform: translateX(-50%);
+}
 
 .story-scroll__split-handwriting { display:block; position:relative; width:100%; aspect-ratio:621 / 194; }
 .story-scroll__split-handwriting img { position:absolute; inset:0; width:100%; height:auto; }
@@ -2527,3 +2535,53 @@ body {
 .try__start.try__mic { gap:4px; }
 .try__mic:focus-visible { outline:2px solid #fff6e7; outline-offset:10px; border-radius:24px; }
 @media(max-width:600px) { .vintage-microphone { width:190px; height:245px; } }
+
+/* 히어로 스크롤 안내: 마우스 모양 + 내려가는 점 + 살짝 떠오르는 움직임 */
+.hero__cue { display: grid; justify-items: center; gap: 10px; top: 50%; bottom: auto; transform: translate(-50%, -50%); animation: cue-float 2.4s ease-in-out infinite; }
+.hero__cue .hero__mouse { width: 26px; height: 42px; border: 2px solid rgba(255,255,255,.85); border-radius: 14px; background: none; animation: none; position: relative; box-shadow: 0 2px 12px rgba(0,0,0,.15); }
+.hero__cue .hero__mouse i { position: absolute; left: 50%; top: 8px; width: 4px; height: 8px; margin-left: -2px; border-radius: 2px; background: #fff; animation: cue-wheel 1.8s ease-in-out infinite; }
+.hero__cue em { font-style: normal; font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: rgba(255,255,255,.9); text-shadow: 0 1px 6px rgba(0,0,0,.25); padding-left: .28em; }
+@keyframes cue-wheel { 0% { opacity: 0; transform: translateY(0); } 25% { opacity: 1; } 80%, 100% { opacity: 0; transform: translateY(14px); } }
+@keyframes cue-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 6px; } }
+@media (prefers-reduced-motion: reduce) { .hero__cue, .hero__cue .hero__mouse i { animation: none; } }
+
+.postcode-row { display: flex; gap: 8px; }
+.postcode-row input { flex: 1; min-width: 0; }
+
+/* HERO 순서: 구름 하늘 4초 → 손하트 2초 → 장미 2초 → 다시 하늘 (한 바퀴 8초, 전환 0.6초) */
+.hero__media--sky { animation: hero-sky-8 8s var(--ease) infinite; opacity: 1; }
+.hero__media--rose { animation: hero-rose-8 8s var(--ease) infinite; }
+@keyframes hero-sky-8 { 0%, 50% { opacity: 1; } 57.5%, 92.5% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes hero-rose-8 { 0%, 75% { opacity: 0; } 82.5%, 100% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hero__media--sky, .hero__media--rose { animation: none; } }
+
+/* 기념일 전 도착이 어려울 때 안내 팝업 */
+.late-popup { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(40, 44, 58, 0.55); }
+.late-popup__card { width: min(100%, 380px); padding: 28px 24px; border-radius: 16px; background: var(--cream); color: var(--violet); text-align: center; }
+.late-popup__card b { display: block; font-size: 18px; }
+.late-popup__card p { margin-top: 10px; font-size: 15px; }
+.late-popup__actions { display: grid; gap: 12px; margin-top: 22px; }
+.late-popup__actions .btn {
+  min-height: 48px;
+  padding: 10px 12px;
+  background: var(--violet);
+  color: var(--cream);
+  font-size: 16px;
+  line-height: 1.4;
+  box-shadow: none;
+}
+.late-popup__actions .btn--ghost {
+  background: transparent;
+  color: var(--violet);
+  border: 1px solid var(--violet);
+}
+
+/* 미리보기: 확정 전 빠진 것 채우기 창 */
+.fix-popup { text-align: left; }
+.fix-popup > b { text-align: center; }
+.fix-popup__list { margin: 12px 0 0; padding-left: 18px; font-size: 15px; }
+.fix-popup__fields { display: grid; gap: 10px; margin-top: 16px; }
+.fix-popup__fields label { display: grid; gap: 4px; font-size: 14px; }
+.fix-popup__fields input { padding: 10px 12px; border: 1px solid rgba(105, 89, 116, 0.4); border-radius: 8px; font: inherit; color: var(--violet); background: #fff; }
+.fix-popup__check { display: flex; gap: 8px; align-items: center; margin-top: 14px; font-size: 14px; }
+.preview-actions__finish[aria-disabled="true"] { opacity: 0.55; }

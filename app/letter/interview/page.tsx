@@ -209,7 +209,7 @@ export default function WritePage() {
           <h2>편지 넣을 페이지</h2>
           <p className="letter-drop-status" role="status">{placementMessage||"원하는 페이지 위에 편지지를 놓아 주세요."}</p>
           {drag.placingId && !drag.ghost && <div className="letter-tap-bar" role="status"><span>편지를 넣을 페이지를 눌러 주세요</span><button type="button" onClick={()=>{drag.setPlacingId(null);setPlacementMessage("");}}>취소</button></div>}
-          <PhotoPages draft={{...draft,bookPhotos:photos,letters}} index={cursor} onSelect={setCursor} editable={false}
+          <PhotoPages draft={{...draft,bookPhotos:photos,letters}} index={cursor} onSelect={setCursor} editable={false} editPlacedLetter
             placingLetterId={drag.placingId} dropPageId={drag.hoverId} onPlaceLetter={placeLetter} onDropHover={drag.setHoverId}
             letterGrab={{ start: (e, pageId) => { const l = letters.find(x => x.pageId === pageId); if (l) drag.start(e, l.id); }, move: drag.move, end: drag.end }}
             onRemoveLetter={pageId => { save(d => ({ bookPhotos: (d.bookPhotos ?? photos).filter(ph => ph.id !== pageId || ph.photoId), letters: d.letters!.map(l => l.pageId === pageId ? { ...l, pageId: null } : l) })); setPlacementMessage("편지를 페이지에서 빼서 보관함으로 돌려놓았어요."); }} />

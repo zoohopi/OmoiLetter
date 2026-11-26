@@ -3,7 +3,7 @@ import {useLayoutEffect,useRef,useState,type CSSProperties} from "react";
 import {splitLetterParts,type LetterPaperId} from "@/lib/letter/papers";
 type Edit={onQuestion?:(value:string)=>void;onChange:(value:string)=>void;maxLength:number;placeholder:string};
 const region=(x:number,y:number,w:number,h:number):CSSProperties=>({position:"absolute",left:`calc(var(--bleed) + var(--pt) * ${x})`,top:`calc(var(--bleed) + var(--pt) * ${y})`,width:`calc(var(--pt) * ${w})`,height:`calc(var(--pt) * ${h})`});
-export default function LetterStationery({paper,question,answer,no,edit}:{paper:LetterPaperId;question:string;answer:string;no:number;edit?:Edit}){
+export default function LetterStationery({paper,question,answer,edit}:{paper:LetterPaperId;question:string;answer:string;edit?:Edit}){
  const {to,body,from}=splitLetterParts(question,answer);
  const heading=/^(?:to\.?\s|편지\s*\d+\s*$)/i.test(question) ? "" : question;
  const NL=String.fromCharCode(10);const lines=answer.split(NL);const toAt=lines.findIndex(l=>l.trim());const hasTo=toAt>=0&&/^to\.?\s*[:：]?\s*/i.test(lines[toAt]);const rest=hasTo?lines.slice(toAt+1).join(NL).replace(/^\s+/,""):answer;
@@ -24,7 +24,6 @@ export default function LetterStationery({paper,question,answer,no,edit}:{paper:
   {paper===2&&<><div className="stationery__small" style={region(65,58,280,15)}>A PERSONAL LETTER</div><div className="stationery__heading" style={region(65,239,468,48)}>{title}</div></>}
   {paper===3&&<><div className="stationery__heading" style={region(156,148,286,62)}>{title}</div></>}
   <div ref={ref} className={`stationery__content ${paper===2&&!editing?"stationery__columns":""}`} style={box} data-letter-overflow={overflow?"true":"false"} onDoubleClick={startEdit}>{paper===3&&toEl}{content}</div>
-  <div className="stationery__small" style={paper===2?region(65,570,468,15):region(40,562,500,18)}>{String(no).padStart(2,"0")}  OMOI LETTER</div>
   {overflow&&!editing&&<div className="stationery__overflow" role="status">글이 영역을 넘어요. 편지를 나누거나 내용을 줄여 주세요.</div>}
  </div>;
 }

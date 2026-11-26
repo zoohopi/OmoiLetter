@@ -68,8 +68,8 @@ const minimal: Design = {
     els: [
       { t: "photo", r: [36, 60, 562, 412] },
       { t: "text", r: [35.83, 460.23, 420.27, 532], text: "{coverTitle}", s: mSerif(16.9153, 32.2928) },
-      { t: "text", r: [36.72, 543.01, 286.72, 563.01], text: "To. {name}", s: mArial(7, 12.6) },
-      { t: "text", r: [350.02, 543.01, 560.02, 565.01], text: "{date}", s: mArial(8, 14.4, { align: "right" }) },
+      { t: "text", r: [36.72, 543.01, 286.72, 563.01], text: "To. {name}", s: mArial(10, 15.6) },
+      { t: "text", r: [350.02, 543.01, 560.02, 565.01], text: "{date}", s: mArial(11, 17.4, { align: "right" }) },
     ],
   },
   back: {
@@ -140,8 +140,8 @@ const magazine: Design = {
       { t: "photo", r: [0, 0, 398, PAGE_PT] },
       { t: "text", r: [422, 44, 582, 144], text: "Omoi\nLetter", s: gSerif(29, 32) },
       { t: "text", r: [422, 180, 572, 290], text: "A LETTER FOR YOU\n{coverTitle}", s: gSerif(9, 17) },
-      { t: "text", r: [422, 505, 572, 535], text: "To. {name}", s: gSerif(10, 16) },
-      { t: "text", r: [422, 535, 572, 555], text: "{date}", s: gArial(8, 12.8, { track: 80 }) },
+      { t: "text", r: [422, 505, 572, 535], text: "To. {name}", s: gSerif(13, 19) },
+      { t: "text", r: [422, 535, 572, 555], text: "{date}", s: gArial(11, 15.8, { track: 80 }) },
     ],
   },
   back: {

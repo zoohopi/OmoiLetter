@@ -12,11 +12,11 @@ export function useDraftGuard({ allowSubmitted = false, requireCover = false } =
   useEffect(() => {
     if (draft === null) router.replace("/start");
     else if (draft && draft.status === "submitted" && !allowSubmitted) router.replace("/letter/done");
-    else if (draft && requireCover && !draft.coverPhotoId) router.replace("/start");
+    else if (draft && requireCover && draft.coverType !== "text" && !draft.coverPhotoId) router.replace("/start");
   }, [draft, router, allowSubmitted, requireCover]);
 
   if (!draft) return null;
   if (draft.status === "submitted" && !allowSubmitted) return null;
-  if (requireCover && !draft.coverPhotoId) return null;
+  if (requireCover && draft.coverType !== "text" && !draft.coverPhotoId) return null;
   return draft;
 }

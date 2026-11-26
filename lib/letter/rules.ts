@@ -80,5 +80,5 @@ export function checkReady(draft: Draft) {
 
 // 표지 사진은 시작 화면에서 따로 고른다.
 export function hasValidCover(draft: Draft) {
-  return Boolean(draft.coverPhotoId);
+  return draft.coverType === "text" || Boolean(draft.coverPhotoId);
 }

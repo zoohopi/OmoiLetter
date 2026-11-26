@@ -1643,7 +1643,7 @@
 .letters-empty__actions { display: grid; justify-items: center; gap: 6px; }
 
 /* 표지 종류: 사진 표지 / 텍스트 표지 (텍스트 표지는 가안 — 디자인 확정 후 교체) */
-.cover-type { display: flex; justify-content: center; gap: 8px; margin: 4px 0 12px; }
+.cover-type { display: flex; justify-content: center; gap: 8px; margin: 7px 0 12px; }
 .cover-type button { padding: 8px 18px; border: 1px solid currentColor; border-radius: 999px; background: none; color: inherit; font: inherit; font-size: 14px; opacity: .55; cursor: pointer; }
 .cover-type button[aria-pressed="true"] { opacity: 1; background: #fff; color: #222; border-color: #fff; font-weight: 600; }
 .text-cover { width: 211mm; height: 211mm; box-sizing: border-box; padding: 34mm 24mm 20mm; display: flex; flex-direction: column; background: #f4efe6; color: #2b2622; font-family: "Noto Serif KR", serif; }
@@ -1726,3 +1726,16 @@
 
 .preview-actions__row { display:flex; align-items:center; justify-content:center; gap:20px; max-width:100%; }
 @media(max-width:480px) { .preview-actions__row { gap:12px; } .preview-actions__row .link-btn { font-size:12px; } .preview-actions__row .preview-actions__finish { padding:10px 12px; font-size:12px; } }
+
+/* STEP 1: 넓은 화면에서는 표지 미리보기(왼쪽, 고정)와 입력(오른쪽)을 나란히 */
+@media (min-width: 900px) {
+  .start-page .maker__inner { max-width: 1040px; }
+  .start-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; align-items: start; margin-top: 28px; }
+  .start-layout .start-main { position: sticky; top: 96px; }
+  .start-layout .start-book { margin: 20px 0 0; max-width: none; }
+  .start-side .start-cover-fields { margin: 20px 0 0; max-width: none; }
+}
+
+
+
+:is(.photo-page.is-editing-letter, .pv-page--letter.is-editing) .stationery textarea:focus { outline: 1px solid #ed913f; outline-offset: 1px; border-color: #ed913f; }

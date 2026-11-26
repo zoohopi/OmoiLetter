@@ -11,6 +11,18 @@ export default function LetterPaperPicker({pages,papers,onChange,onEdit,intro}:{
  return <div className="paper-pick">
   <p className="paper-pick__count">편지 {ORDINAL[sel]??`${sel+1}번째`}장 (전체 {pages.length}장)</p>{intro}
   <div className="paper-pick__one"><button type="button" className="paper-pick__nav" aria-label="이전 장" disabled={sel===0} onClick={()=>setSelected(sel-1)}>‹</button>{pages.map((answer,n)=>n!==sel?null:<div role="button" tabIndex={0} key={n} className={`paper-pick__page${n===sel?" is-selected":""}`} aria-pressed={n===sel} aria-label={`편지 ${n+1}장 선택`} onClick={()=>setSelected(n)} onKeyDown={e=>{if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();setSelected(n);}}}><ScaledPage><BookPage page={{kind:"leaf",side:n%2?"right":"left",layout:"portrait",no:n+1,photoId:null,question:"편지 "+(n+1),answer,photoPage:true,letterPaper:papers[n]??1}} size="8x8" recipientName="" anniversaryDate="" textEdit={onEdit?{onChange:v=>onEdit(n,v),maxLength:2000,placeholder:"편지 내용을 적어 주세요"}:undefined}/></ScaledPage></div>)}<button type="button" className="paper-pick__nav" aria-label="다음 장" disabled={sel>=pages.length-1} onClick={()=>setSelected(sel+1)}>›</button></div>
-  <div className="layout-pick" role="group" aria-label={`편지 ${sel+1}장 속지`}>{LETTER_PAPERS.map(p=><button key={p.id} type="button" aria-pressed={(papers[sel]??1)===p.id} onClick={()=>onChange(sel,p.id)}>{p.name}</button>)}</div>
+  <LetterPaperOptions value={papers[sel] ?? 1} onChange={id => onChange(sel,id)} />
  </div>;
+}
+
+export function LetterPaperOptions({ value, onChange }: { value: LetterPaperId; onChange: (id: LetterPaperId) => void }) {
+ return (
+  <div className="layout-pick" role="group" aria-label="편지지 다시 고르기">
+   {LETTER_PAPERS.map(paper => (
+    <button key={paper.id} type="button" aria-pressed={value === paper.id} onClick={() => onChange(paper.id)}>
+     {paper.name}
+    </button>
+   ))}
+  </div>
+ );
 }

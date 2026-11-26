@@ -2,16 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Draft } from "@/lib/letter/types";
+import { MAX_ANSWER_LENGTH } from "@/lib/letter/rules";
 import { movePage } from "@/lib/letter/reorder";
 import { updateDraft } from "@/lib/letter/store";
 import { setQuestionPhoto } from "@/lib/letter/photoActions";
 import BookPage, { buildInnerPages } from "./BookPage";
 import ScaledPage from "./ScaledPage";
+import { LetterPaperOptions } from "./LetterPaperPicker";
+import type { LetterPaperId } from "@/lib/letter/papers";
 import LayoutPick from "./LayoutPick";
 import { photoPageDesign } from "@/lib/letter/designs";
 import PhotoTools, { photoEditorProps } from "./PhotoTools";
 
-export default function PhotoPages({ draft, index, onSelect, editable = true, placingLetterId, dropPageId, onPlaceLetter, onDropHover, onRemoveLetter, letterGrab }: { draft: Draft; index: number; onSelect: (n: number) => void; editable?: boolean; placingLetterId?: string | null; dropPageId?: string | null; onPlaceLetter?: (letterId: string, pageId: string) => void; onDropHover?: (pageId: string | null) => void; onRemoveLetter?: (pageId: string) => void; letterGrab?: { start: (e: React.PointerEvent<HTMLElement>, pageId: string) => void; move: (e: React.PointerEvent<HTMLElement>) => void; end: (e: React.PointerEvent<HTMLElement>, cancel?: boolean) => void } }) {
+export default function PhotoPages({ draft, index, onSelect, editable = true, placingLetterId, dropPageId, onPlaceLetter, onDropHover, onRemoveLetter, letterGrab, renderLetterPage, editPlacedLetter = false }: { draft: Draft; index: number; onSelect: (n: number) => void; editable?: boolean; placingLetterId?: string | null; dropPageId?: string | null; onPlaceLetter?: (letterId: string, pageId: string) => void; onDropHover?: (pageId: string | null) => void; onRemoveLetter?: (pageId: string) => void; editPlacedLetter?: boolean; renderLetterPage?: (page: ReturnType<typeof buildInnerPages>[number]) => React.ReactNode; letterGrab?: { start: (e: React.PointerEvent<HTMLElement>, pageId: string) => void; move: (e: React.PointerEvent<HTMLElement>) => void; end: (e: React.PointerEvent<HTMLElement>, cancel?: boolean) => void } }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   // 페이지를 끄는 동안(HTML 드래그)에는 휠 스크롤이 안 되므로, 화면 위/아래 끝에 가까이 가면 자동으로 스크롤한다.
@@ -58,7 +61,16 @@ export default function PhotoPages({ draft, index, onSelect, editable = true, pl
         {pair.map((page, offset) => {
           const n = row * 2 + offset;
           const id = page.kind === "leaf" ? page.qid ?? "" : "";
-          return <div key={id} className={`photo-page ${n === selected ? "is-selected" : ""} ${dropPageId === id ? "is-drop-target" : ""} ${draggingId === id ? "is-dragging" : ""} ${moveTargetId === id ? "is-move-target" : ""}`} data-page-index={n} data-letter-drop-id={onPlaceLetter ? id : undefined}
+          const letter = editPlacedLetter && !placingLetterId && !dropPageId
+            ? draft.letters?.find(item => item.pageId === id && item.answer.trim())
+            : undefined;
+          const updateLetter = (fields: { question?: string; answer?: string; paper?: LetterPaperId }) => {
+            if (!letter) return;
+            updateDraft(current => ({
+              letters: current.letters?.map(item => item.id === letter.id ? { ...item, ...fields } : item),
+            }));
+          };
+          return <div key={id} className={`photo-page ${n === selected ? "is-selected" : ""} ${dropPageId === id ? "is-drop-target" : ""} ${draggingId === id ? "is-dragging" : ""} ${moveTargetId === id ? "is-move-target" : ""} ${letter && editingId === id ? "is-editing-letter" : ""}`} data-page-index={n} data-letter-drop-id={onPlaceLetter ? id : undefined}
             draggable={canReorder && editingId !== id}
             onDragStart={e => {
               if (!canReorder || editingId === id) { e.preventDefault(); return; }
@@ -73,21 +85,31 @@ export default function PhotoPages({ draft, index, onSelect, editable = true, pl
             onPointerMove={e => { const g = grab.current; if (!g || !letterGrab) return; if (!g.active && Math.hypot(e.clientX - g.x, e.clientY - g.y) > 6) { g.active = true; letterGrab.start(e, id); } else if (g.active) letterGrab.move(e); }}
             onPointerUp={e => { const g = grab.current; grab.current = null; if (g?.active && letterGrab) { suppressClick.current = true; letterGrab.end(e); } }}
             onPointerCancel={e => { const g = grab.current; grab.current = null; if (g?.active && letterGrab) letterGrab.end(e, true); }}
-            onDoubleClickCapture={() => { onSelect(n); if (editable) setEditingId(id); }}
+            onDoubleClickCapture={() => { onSelect(n); if (editable || letter) setEditingId(id); }}
             onClick={() => { if (suppressClick.current) { suppressClick.current = false; return; } if(placingLetterId && onPlaceLetter)onPlaceLetter(placingLetterId,id); else if(onRemoveLetter) onSelect(n); }}
             onDragOver={(e) => { if(canReorder && e.dataTransfer.types.includes("application/x-omoi-page")) { e.preventDefault(); e.dataTransfer.dropEffect="move"; setMoveTargetId(id); return; } if(!onPlaceLetter || !e.dataTransfer.types.includes("application/x-omoi-letter"))return;e.preventDefault();e.dataTransfer.dropEffect="move";onDropHover?.(id); }}
             onDragLeave={(e) => { if(!(e.relatedTarget instanceof Node) || !e.currentTarget.contains(e.relatedTarget)) { onDropHover?.(null); setMoveTargetId(null); } }}
             onDrop={(e) => {const pageId=e.dataTransfer.getData("application/x-omoi-page");if(pageId && canReorder){e.preventDefault();e.stopPropagation();moveTo(pageId,id);setDraggingId(null);setMoveTargetId(null);return;}const letterId=e.dataTransfer.getData("application/x-omoi-letter");if(!letterId||!onPlaceLetter)return;e.preventDefault();onPlaceLetter(letterId,id);onDropHover?.(null);}}>
-            <ScaledPage><BookPage page={page} design={draft.design} size={draft.bookSize} recipientName={draft.recipientName} anniversaryDate={draft.anniversaryDate}
+            {renderLetterPage && page.kind === "leaf" && draft.letters?.some(letter => letter.pageId === id) ? renderLetterPage(page) : <ScaledPage><BookPage page={page} design={draft.design} size={draft.bookSize} recipientName={draft.recipientName} anniversaryDate={draft.anniversaryDate}
               {...photoEditorProps(draft, id, editable && editingId === id && n === selected ? "image" : null, (mode) => { onSelect(n); setEditingId(mode ? id : null); }, editable)}
+              textEdit={letter ? {
+                maxLength: MAX_ANSWER_LENGTH,
+                placeholder: "",
+                onQuestion: question => updateLetter({ question }),
+                onChange: answer => { if (answer.trim()) updateLetter({ answer }); },
+              } : undefined}
               photoEdit={editable ? { busy, onPhoto: (file) => {
                 setBusy(true); setError("");
                 void setQuestionPhoto(id, file).catch(() => setError("사진을 열지 못했어요.")).finally(() => setBusy(false));
               } } : undefined} />
-            </ScaledPage>
+            </ScaledPage>}
             <button className="link-btn photo-page__select" type="button" aria-pressed={n === selected} aria-label={`내지 ${n + 1}쪽 선택`} title={canReorder ? "드래그하여 순서 변경 · Alt+방향키로 이동" : undefined}
               onKeyDown={e => { if(!canReorder || !e.altKey || !["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key))return; const to=n+(["ArrowUp","ArrowLeft"].includes(e.key)?-1:1); const target=pages[to]; if(target?.kind!=="leaf" || !target.qid)return; e.preventDefault();moveTo(id,target.qid); }}
               onClick={() => { onSelect(n); setEditingId(null); }}>내지 {n + 1}쪽</button>
+            {letter && n === selected && <LetterPaperOptions
+              value={letter.paper ?? draft.letterPaper ?? 1}
+              onChange={paper => updateLetter({ paper })}
+            />}
             {onRemoveLetter && n === selected && draft.letters?.some(l => l.pageId === id) && <button type="button" className="photo-page__remove-letter" onClick={(e) => { e.stopPropagation(); onRemoveLetter(id); }} aria-label={`내지 ${n + 1}쪽 편지를 보관함으로 되돌리기`} title="보관함으로 되돌리기">↺</button>}
           </div>;
         })}
@@ -95,16 +117,22 @@ export default function PhotoPages({ draft, index, onSelect, editable = true, pl
       {editable && Math.floor(selected / 2) === row && pages[selected]?.kind === "leaf" && (() => {
         const page = pages[selected]; if (page.kind !== "leaf" || !page.qid) return null;
         const id = page.qid;
-        if (!layoutHasPhoto(draft, page)) return null;
+        const letter = renderLetterPage && draft.letters?.find(item => item.pageId === id && item.answer.trim());
+        if (!letter && !layoutHasPhoto(draft, page)) return null;
         return <div className="photo-page-list__controls">
-          <LayoutPick design={draft.design} qid={id} value={page.layout} />
+          {letter ? <LetterPaperOptions
+            value={letter.paper ?? draft.letterPaper ?? 1}
+            onChange={paper => updateDraft(current => ({
+              letters: current.letters?.map(item => item.id === letter.id ? { ...item, paper } : item),
+            }))}
+          /> : <LayoutPick design={draft.design} qid={id} value={page.layout} />}
           <div className="compose-controls">
             <button className="link-btn" disabled={busy} onClick={() => {
-              updateDraft((d) => ({ bookPhotos: d.bookPhotos?.filter((p) => p.id !== id), letters: d.letters?.map((l) => l.pageId === id ? { ...l, pageId: null } : l) }));
+              updateDraft((d) => ({ bookPhotos: d.bookPhotos?.filter((p) => p.id !== id || Boolean(letter && p.photoId)), letters: d.letters?.map((l) => l.pageId === id ? { ...l, pageId: null } : l) }));
               setEditingId(null);
             }}>이 페이지 삭제</button>
           </div>
-          <PhotoTools draft={draft} scope={id} mode={editingId === id ? "image" : null} setMode={(mode) => setEditingId(mode ? id : null)} />
+          {!letter && <PhotoTools draft={draft} scope={id} mode={editingId === id ? "image" : null} setMode={(mode) => setEditingId(mode ? id : null)} />}
         </div>;
       })()}
     </div>)}

@@ -147,11 +147,24 @@ export default function BookPage({ page, designOverride, design: designId, size,
     textEdit: page.kind === "leaf" ? textEdit : undefined,
   };
 
+  const isLeaf = page.kind === "leaf";
+  const isStationery = isLeaf && Boolean(page.letterPaper && page.answer.trim());
+  const isPhoto = isLeaf && !isStationery && pd.els.some(el => el.t === "photo");
+  const pageNumber = isLeaf && !page.photoPage
+    ? page.no * 2 - (page.side === "left" ? 1 : 0)
+    : ctx.no;
+
   return (
     <div className={`bp tp tp--${design.id} tp--${page.kind}`} style={style}>
-      {page.kind === "leaf" && page.letterPaper && page.answer.trim() ? <LetterStationery paper={page.letterPaper} question={page.question} answer={page.answer} no={page.no} edit={textEdit}/> : pd.els.map((el, i) => (
+      {page.kind === "leaf" && page.letterPaper && page.answer.trim() ? <LetterStationery paper={page.letterPaper} question={page.question} answer={page.answer} edit={textEdit}/> : pd.els.filter(el => !isLeaf || el.t !== "text" || !/\{(?:no|il|ir|pl|pr)\}\s+OMOI (?:PHOTO|LETTER)/.test(el.text)).map((el, i) => (
         <Element key={i} el={el} ctx={ctx} />
       ))}
+      {page.kind === "leaf" && <Element ctx={{ ...ctx, no: pageNumber }} el={{
+        t: "text",
+        r: [36, 562, PAGE_PT - 36, 580],
+        text: isPhoto ? "{no}  OMOI PHOTO" : "{no}  OMOI LETTER",
+        s: { font: "arial", size: 7, lead: 12.6, align: page.side, color: "#40364a" },
+      }} />}
     </div>
   );
 }

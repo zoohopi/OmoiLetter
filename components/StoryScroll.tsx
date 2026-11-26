@@ -117,7 +117,7 @@ export default function StoryScroll() {
         <div className="story-scroll__stage">
           {STORY.map((para, i) => (
             <p key={i} className="story-scroll__para">
-              {i === 0 ? <Image className="story-scroll__handwritten-line" src="/handwriting/story-first-line-v2.webp" alt="저는 말을 잘 못하는 사람입니다." width={726} height={86} sizes="(max-width: 680px) 90vw, 640px" /> : i === 1 ? <span className="story-scroll__split-handwriting" role="img" aria-label="사랑해, 고마워. 늘 마음속에 있는 말인데"><Image className="story-scroll__split-handwriting-top" src="/handwriting/story-second-line-v1.webp" alt="" width={621} height={194} sizes="(max-width: 680px) 90vw, 640px" /><Image className="story-scroll__split-handwriting-bottom" src="/handwriting/story-second-line-v1.webp" alt="" width={621} height={194} sizes="(max-width: 680px) 90vw, 640px" /></span> : para.map((line, j) => (
+              {i < 7 ? <Image className="story-scroll__handwritten-line" src={`/handwriting/story-aligned-${i + 1}.webp`} alt={para.join(" ")} width={760} height={126} sizes="(max-width: 680px) 90vw, 640px" /> : para.map((line, j) => (
                 <span key={j}>
                   <Line text={line} />
                   {j < para.length - 1 && <br />}

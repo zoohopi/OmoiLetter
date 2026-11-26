@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDraftGuard } from "@/lib/letter/guard";
+import PhotoPages from "@/components/letter/PhotoPages";
 import { submitDraft, updateDraft } from "@/lib/letter/store";
 import { setCoverPhoto, setQuestionPhoto } from "@/lib/letter/photoActions";
 import { BOOK_LABEL, checkReady, MAX_ANSWER_LENGTH, todayString } from "@/lib/letter/rules";
@@ -18,6 +19,8 @@ export default function PreviewPage() {
   const draft = useDraftGuard();
   const router = useRouter();
   const [editingPage, setEditingPage] = useState<string | null>(null);
+  const [fixOpen, setFixOpen] = useState(false);
+  const [selectedPage, setSelectedPage] = useState(0);
   if (!draft) return null;
 
   const inner = buildInnerPages(draft);
@@ -44,13 +47,27 @@ export default function PreviewPage() {
             <Page draft={draft} page={{ kind: "cover", photoId: draft.coverPhotoId }} editing={editingPage === "cover"} setEditing={(on) => setEditingPage(on ? "cover" : null)} />
           </div>
 
-          {spreads.map((pages, i) => (
+          {draft.bookPhotos ? (
+            <PhotoPages
+              draft={draft}
+              index={selectedPage}
+              onSelect={(index) => {
+                setSelectedPage(index);
+                if (editingPage === "cover" || selectedPage !== index) setEditingPage(null);
+              }}
+              renderLetterPage={(page) => {
+                const key = page.kind === "leaf" ? page.qid ?? "" : "";
+                return <Page draft={draft} page={page} editing={editingPage === key} setEditing={(on) => setEditingPage(on ? key : null)} />;
+              }}
+            />
+          ) : spreads.map((pages, i) => (
             <div key={i}>
               <p className="pv-label">펼침 {i + 1}</p>
-              <div className={`pv-spread ${pages.length === 1 ? "pv-spread--single" : ""}`}>
-                {pages.map((p, j) => (
-                  <Page key={j} draft={draft} page={p} editing={editingPage === `inner-${i}-${j}`} setEditing={(on) => setEditingPage(on ? `inner-${i}-${j}` : null)} />
-                ))}
+              <div className="pv-spread">
+                {pages.map((page, j) => {
+                  const key = `inner-${i}-${j}`;
+                  return <Page key={key} draft={draft} page={page} editing={editingPage === key} setEditing={(on) => setEditingPage(on ? key : null)} />;
+                })}
               </div>
             </div>
           ))}
@@ -72,6 +89,8 @@ export default function PreviewPage() {
           </div>
         )}
 
+        {fixOpen && <FixPopup draft={draft} problems={problems} onClose={() => setFixOpen(false)} />}
+
         <div className="actions preview-actions">
           <Link className="link-btn" href="/letter/interview">
             ← 편지 고치기
@@ -83,8 +102,9 @@ export default function PreviewPage() {
           <button
             className="btn btn--small preview-actions__finish"
             type="button"
-            disabled={problems.length > 0}
+            aria-disabled={problems.length > 0}
             onClick={() => {
+              if (problems.length > 0) { setFixOpen(true); return; }
               if (!confirm("확정하면 더 이상 고칠 수 없어요. 이대로 편지를 완성할까요?")) return;
               submitDraft();
               router.push("/letter/done");
@@ -122,12 +142,17 @@ function Page({ draft, page, editing, setEditing }: { draft: Draft; page: PageSp
   };
 
   const on = editing && editable;
-  const attachedLetters = leaf ? draft.letters?.filter(l => l.pageId === leaf.qid) ?? [] : [];
+  const attachedLetters = leaf ? draft.letters?.filter(l => l.pageId === leaf.qid && l.answer.trim()) ?? [] : [];
+  const isLetter = Boolean(leaf && (attachedLetters.length || !photoSide));
 
   return (
     <div
-      className={`pv-page ${editable ? "is-editable" : ""} ${on ? "is-editing" : ""}`}
-      onDoubleClickCapture={() => editable && setEditing(true)}
+      className={`pv-page ${editable ? "is-editable" : ""} ${on ? "is-editing" : ""} ${isLetter ? "pv-page--letter" : ""}`}
+      onDoubleClickCapture={(event) => {
+        if (!editable || (event.target instanceof Element && event.target.closest("input, textarea, button"))) return;
+        setEditing(true);
+        if (photoSide && leaf?.photoId) setPhotoMode("image");
+      }}
       title={editable && !on ? "두 번 눌러 고치기" : undefined}
     >
       <ScaledPage>
@@ -156,34 +181,59 @@ function Page({ draft, page, editing, setEditing }: { draft: Draft; page: PageSp
               : undefined
           }
           textEdit={
-            leaf && attachedLetters.length <= 1
+            leaf && isLetter
               ? {
                   maxLength: MAX_ANSWER_LENGTH,
                   placeholder: "",
-                  onQuestion: (v) => updateDraft((d) => ({ letters: d.letters?.map((l) => l.pageId === leaf.qid ? { ...l, question: v } : l) })),
-                  onChange: (v) => updateDraft((d) => {
-                    const attached = d.letters?.filter((l) => l.pageId === leaf.qid);
-                    return attached?.length ? { letters: d.letters?.map((l) => l.pageId === leaf.qid ? { ...l, answer: l.id === attached[0].id ? v : "" } : l) } : { answers: { ...d.answers, [leaf.qid!]: v } };
+                  onQuestion: (value) => updateDraft(current => ({
+                    letters: current.letters?.map(letter => letter.id === attachedLetters[0]?.id ? { ...letter, question: value } : letter),
+                  })),
+                  onChange: (value) => updateDraft(current => {
+                    if (!attachedLetters.length) return { answers: { ...current.answers, [leaf.qid!]: value } };
+                    const suffix = attachedLetters.slice(1).map(letter => letter.answer).join("\n\n");
+                    const answer = suffix && value.endsWith("\n\n" + suffix)
+                      ? value.slice(0, -(suffix.length + 2))
+                      : value;
+                    return { letters: current.letters?.map(letter => letter.id === attachedLetters[0].id ? { ...letter, answer } : letter) };
                   }),
                 }
               : undefined
           }
         />
       </ScaledPage>
-      {on && attachedLetters.length > 1 && <div className="pv-edit-bar" style={{ display:"grid" }}>
-        {attachedLetters.map(letter => <div key={letter.id}>
-          <label>질문<textarea aria-label="편지 질문 수정" value={letter.question} onChange={e => updateDraft(d => ({ letters:d.letters?.map(l => l.id === letter.id ? { ...l, question:e.target.value } : l) }))} /></label>
-          <label>편지 내용<textarea aria-label="편지 내용 수정" value={letter.answer} maxLength={MAX_ANSWER_LENGTH} onChange={e => updateDraft(d => ({ letters:d.letters?.map(l => l.id === letter.id ? { ...l, answer:e.target.value } : l) }))} /></label>
-        </div>)}
-      </div>}
-      {on && leaf && <LayoutPick design={draft.design} qid={leaf.qid!} value={leaf.layout} />}
-      {on && (
+      {on && leaf && !attachedLetters.length && <LayoutPick design={draft.design} qid={leaf.qid!} value={leaf.layout} />}
+      {on && !isLetter && (
         <div className="pv-edit-bar">
           <span>{leaf ? (photoSide ? "사진을 눌러 바꾸고, 레이아웃도 골라요" : "글을 바로 고쳐요") : "사진·이름·날짜를 바로 고쳐요"}</span>
 
         </div>
       )}
       {error && <p className="ph-error">{error}</p>}
+    </div>
+  );
+}
+
+// 확정 전에 빠진 것: 첫 단계 정보(받는 분·기념일·늦은 도착 동의)는 이 창에서 바로 고치고, 나머지는 고칠 화면으로 안내한다.
+function FixPopup({ draft, problems, onClose }: { draft: Draft; problems: string[]; onClose: () => void }) {
+  const go = (p: string) =>
+    p.includes("표지") ? ["/start", "표지 고르러 가기"] :
+    p.includes("사진") ? ["/letter/photos", "사진 고르러 가기"] :
+    p.includes("편지") || p.includes("질문") ? ["/letter/interview", "편지 쓰러 가기"] : null;
+  return (
+    <div className="late-popup" role="dialog" aria-modal="true" aria-labelledby="fix-popup-title" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="late-popup__card fix-popup">
+        <b id="fix-popup-title">{problems.length ? "완성 전에 채워 주세요" : "모두 채웠어요!"}</b>
+        {problems.length > 0 && <ul className="fix-popup__list">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}
+        {(!draft.recipientName.trim() || !draft.anniversaryDate) && <div className="fix-popup__fields">
+          <label>받으시는 분 (To.)<input type="text" maxLength={12} autoFocus value={draft.recipientName} onChange={(e) => updateDraft(() => ({ recipientName: e.target.value }))} placeholder="이름 또는 애칭" /></label>
+          <label>기념일<input type="date" min={todayString()} value={draft.anniversaryDate} onChange={(e) => updateDraft(() => ({ anniversaryDate: e.target.value, lateAccepted: false }))} /></label>
+        </div>}
+        {problems.some((p) => p.includes("도착에 동의")) && <label className="fix-popup__check"><input type="checkbox" checked={draft.lateAccepted} onChange={(e) => updateDraft(() => ({ lateAccepted: e.target.checked }))} /> 기념일 이후 도착해도 괜찮아요.</label>}
+        <div className="late-popup__actions">
+          {[...new Map(problems.map(go).filter((x): x is string[] => Boolean(x)).map((x) => [x[0], x])).values()].map(([href, label]) => <Link key={href} className="btn btn--ghost" href={href}>{label}</Link>)}
+          <button className="btn" type="button" onClick={onClose}>{problems.length ? "닫기" : "확인"}</button>
+        </div>
+      </div>
     </div>
   );
 }
