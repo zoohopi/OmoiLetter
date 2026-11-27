@@ -1542,46 +1542,6 @@
 .direct-letter__proposal{padding:24px;text-align:left;border:1px solid #d7dfed;border-radius:16px;background:#f7faff;color:#4067a0;margin:24px 0}.direct-letter__proposal h2{font-size:18px;margin:0 0 16px}.direct-letter__proposal>p{white-space:pre-wrap;font:20px/1.9 var(--font-title),cursive;overflow-wrap:anywhere}.direct-letter__error{color:#a3424c;font-size:14px}.direct-letter :disabled{cursor:wait}
 
 /* 쓰는 방법 팁 — 탭으로 넘기는 카드 */
-.tip-story { margin: 12px 0 20px; padding: 18px 18px 12px; border-radius: 12px; background: #f6efe6; color: #51405e; user-select: none; cursor: pointer; touch-action: pan-y; outline: none; }
-.tip-story h3 { margin: 10px 0 12px; font: 400 15px/1.4 var(--font-body), sans-serif; opacity: .7; }
-.tip-story__dots { display: flex; gap: 4px; }
-.tip-story__dots span { flex: 1; height: 3px; border-radius: 3px; background: #69597433; }
-.tip-story__dots .is-on { background: #695974; }
-.tip-story__card { min-height: 190px; display: flex; flex-direction: column; justify-content: center; gap: 14px; animation: tip-card .35s ease both; }
-.tip-story__scene { display: grid; justify-items: center; gap: 10px; }
-.tip-story__text { margin: 0; text-align: center; font: 400 17px/1.6 var(--font-body), sans-serif; }
-.tip-story__hint { margin: 10px 0 0; text-align: center; font-size: 12px; opacity: .55; }
-.tip-paper { margin: 0; width: 100%; box-sizing: border-box; padding: 16px; border-radius: 6px; background: #fffdf9; box-shadow: 0 2px 8px #0000000f; font: 400 16px/1.8 var(--font-title), serif; }
-.tip-paper--end { text-align: right; }
-.tip-paper mark { background: linear-gradient(transparent 60%, #f3d9a8 60%); color: inherit; }
-.tip-in { display: inline-block; animation: tip-in .5s ease both; }
-.tip-type { display: inline-block; vertical-align: bottom; overflow: hidden; white-space: nowrap; max-width: 0; color: #a0623c; animation: tip-type 1.2s steps(var(--n)) forwards; }
-.tip-bubbles, .tip-fork { display: grid; gap: 8px; justify-items: center; }
-.tip-bubbles .tip-in { padding: 8px 14px; border-radius: 16px 16px 16px 4px; background: #fffdf9; }
-.tip-fork .tip-in { padding: 10px 14px; border-radius: 8px; background: #fffdf9; }
-.tip-chips { display: flex; gap: 8px; }
-.tip-chips span { padding: 8px 14px; border-radius: 999px; background: #fffdf9; }
-.tip-chips .is-picked { animation: tip-pick .5s .3s ease both; }
-.tip-quote { margin: 0; font: 400 22px/1.6 var(--font-title), serif; }
-.tip-quote span { display: inline-block; margin: 0 4px; color: #a0623c; font-size: 1.4em; line-height: 1; vertical-align: -.15em; animation: tip-quote .6s .3s cubic-bezier(.2,1.4,.4,1) both; }
-.tip-quote span:last-child { animation-delay: .45s; }
-@keyframes tip-quote { from { opacity: 0; transform: translateY(18px); } }
-.tip-photo { position: relative; width: 120px; height: 100px; border: 8px solid #fff; border-bottom-width: 22px; background: linear-gradient(135deg, #e8cfa9, #b9a3c4); box-shadow: 0 4px 10px #0000001f; transform: rotate(-3deg); transition: filter .6s; }
-.tip-photo.is-blur { filter: blur(4px); }
-.tip-spark { position: absolute; top: -12px; right: -12px; color: #d9667a; font-size: 24px; }
-.tip-caption { margin: 0; text-align: center; font: 400 15px/1.6 var(--font-title), serif; }
-.tip-check { display: inline-grid; place-items: center; width: 20px; height: 20px; margin-right: 6px; border-radius: 4px; background: #695974; color: #fff; font-size: 13px; animation: tip-pick .4s ease both; }
-.tip-scroll { width: 100%; height: 130px; overflow: hidden; border-radius: 6px; background: #fffdf9; }
-.tip-scroll div { padding: 12px 16px; animation: tip-scroll 3s .3s ease-in-out both; }
-.tip-scroll p { margin: 0 0 14px; font: 400 15px/1.6 var(--font-title), serif; }
-.tip-formula { margin: 0; text-align: center; font: 400 19px/1.6 var(--font-title), serif; }
-.tip-formula small { display: block; margin-bottom: 6px; font: 400 12px var(--font-body), sans-serif; letter-spacing: .2em; opacity: .55; }
-@keyframes tip-card { from { opacity: 0; transform: translateX(16px); } }
-@keyframes tip-in { from { opacity: 0; transform: translateY(8px); } }
-@keyframes tip-type { to { max-width: 20em; } }
-@keyframes tip-pick { 50% { transform: scale(1.15); } to { background: #695974; color: #fff; } }
-@keyframes tip-scroll { to { transform: translateY(-110px); } }
-@media (prefers-reduced-motion: reduce) { .tip-story * { animation-duration: 1ms !important; animation-delay: 0ms !important; } }
 
 /* 다음 질문을 기다리는 동안 */
 .ai-loading { display: grid; justify-items: center; gap: 6px; padding: 56px 0 48px; text-align: center; }

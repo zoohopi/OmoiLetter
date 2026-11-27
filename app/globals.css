@@ -2357,7 +2357,7 @@ body {
 
 /* Larger homepage content on laptop/desktop; full-bleed hero and maker unchanged. */
 @media (min-width: 1024px) {
-  .omoi-home > .page > .inner { zoom: 1.15; }
+  .omoi-home > .page > .inner { --home-content-zoom: 1.15; zoom: var(--home-content-zoom); }
   body:has(.omoi-home) .topbar { zoom: 1.15; }
 }
 
@@ -2585,3 +2585,34 @@ body {
 .fix-popup__fields input { padding: 10px 12px; border: 1px solid rgba(105, 89, 116, 0.4); border-radius: 8px; font: inherit; color: var(--violet); background: #fff; }
 .fix-popup__check { display: flex; gap: 8px; align-items: center; margin-top: 14px; font-size: 14px; }
 .preview-actions__finish[aria-disabled="true"] { opacity: 0.55; }
+
+/* p.05 인터뷰 예시: 질문 전에 보여 주는 편지 팁 카드 */
+.try__tips { position: relative; z-index: 2; display: grid; justify-items: center; gap: var(--try-tip-gap); width: min(100%, 420px); margin: 0 auto; text-align: left; }
+#p03 .try--sample:has(.try__tips) {
+  --try-tip-gap: calc(60px / var(--home-content-zoom, 1));
+  margin-top: var(--try-tip-gap);
+}
+#p03 .try__stage:has(.try__tips) > .try__book,
+#p03 .try__letter:has(.try__tips) > :is(.try__quote, .try__q, .try__aw) { display: none; }
+#p03 .try__letter:has(.try__tips) { padding: 0; }
+.try__tips .tip-story {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: default;
+}
+.try__tips .tip-story__card { min-height: 0; gap: 12px; }
+.try__tips .tip-paper {
+  padding: 15px 20px;
+  border: 1px solid #e2d5c4;
+  border-radius: 8px;
+  background: #fffaf1;
+  box-shadow: 0 6px 18px #25283b30;
+  font-size: clamp(15px, 4vw, 19px);
+}
+.try__tips .tip-story__text { color: var(--cream); text-shadow: 0 1px 5px #24263d; }
+
+#p03 .try-guide-title { display: none; }
+#p03:has(.try__tips) .inner > .center .lead:not(.try-guide-title) { display: none; }
+#p03:has(.try__tips) .try-guide-title { display: block; }

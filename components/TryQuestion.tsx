@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import VintageMicrophone from "@/components/VintageMicrophone";
 import { SamplePage } from "@/components/BookPreview";
 import type { PageSpec } from "@/components/letter/BookPage";
+import "@/components/letter/tips.css";
 
 // p.04 — 인터뷰 예시. '인터뷰하기'를 누르면 따옴표·질문·'답변하기'가 페이드인되고,
 // '답변하기'를 누르면 답이 한 글자씩 페이드인으로 나타난다. 다 쓰면 뒤에 펼친 편지책(매거진 디자인)이
@@ -30,9 +31,17 @@ export default function TryQuestion() {
   const letterRef = useRef<HTMLDivElement>(null);
   const bookRef = useRef<HTMLDivElement>(null);
   const [shown, setShown] = useState(false); // '인터뷰하기'를 눌러 따옴표·질문이 나옴
+  const [tips, setTips] = useState(false); // '인터뷰 예시'를 누르면 먼저 편지 쓰는 팁(1. 편지의 시작)을 보여 준다
+  const [tipStep, setTipStep] = useState(0); // 팁 카드 0: To. 엄마 → 1: 마음을 덧붙인 이름
   const [answering, setAnswering] = useState(false);
   const [count, setCount] = useState(0);
   const [phase, setPhase] = useState<Phase>("write");
+
+  const startInterview = () => {
+    letterRef.current?.closest("section")?.classList.add("is-interviewing");
+    setTips(false);
+    setShown(true);
+  };
 
   // '답변하기'를 누른 뒤 한 글자씩
   useEffect(() => {
@@ -128,14 +137,24 @@ export default function TryQuestion() {
               </button>
             )}
           </div>
-          {!shown && (
-            <button className="try__start try__mic" type="button" onClick={() => {
-              const section = letterRef.current?.closest("section");
-              section?.classList.add("is-interviewing");
-              setShown(true);
-            }}>
+          {!shown && tips && (
+            <div className="try__tips">
+              <section className="tip-story" aria-label="편지의 시작 예시">
+                {tipStep === 0 ? <div key="0" className="tip-story__card">
+                  <p className="tip-paper">To. 엄마</p>
+                  <p className="tip-story__text">편지는 받는 사람 이름부터 시작해요.</p>
+                </div> : <div key="1" className="tip-story__card">
+                  <p className="tip-paper">To. <span className="tip-type" style={{ "--n": 13, animationDelay: "300ms" } as React.CSSProperties}>언제나 나를 믿어주는 우리 </span>엄마</p>
+                  <p className="tip-story__text">이름 앞에 마음을 살짝 덧붙여 보세요.</p>
+                </div>}
+              </section>
+              <button className="btn btn--small" type="button" onClick={() => (tipStep === 0 ? setTipStep(1) : startInterview())}>계속하기</button>
+            </div>
+          )}
+          {!shown && !tips && (
+            <button className="try__start try__mic" type="button" onClick={() => setTips(true)}>
               <VintageMicrophone />
-              <span className="btn">인터뷰 하기</span>
+              <span className="btn">인터뷰 예시</span>
             </button>
           )}
         </div>

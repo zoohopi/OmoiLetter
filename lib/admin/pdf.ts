@@ -6,9 +6,9 @@ import { orderPdfRanges } from "./pdf-parts";
 import { COVER_SPINE_MM, mountCoverSpread } from "./cover-spread";
 import { BLEED_MM, BOOK_TRIM } from "../letter/rules";
 
-export const PDF_TEMPLATE_VERSION = 30;
+export const PDF_TEMPLATE_VERSION = 31;
 const running = new Set<string>();
-export async function renderOrderPdf(orderId: string) {
+export async function renderOrderPdf(orderId: string, part: "all" | "cover" | "interior") {
   let stage = "브라우저 실행";
   if (running.size >= 2 || running.has(orderId)) throw new AdminError("PDF를 생성 중이에요. 잠시 후 다시 눌러 주세요.", 429);
   const base = process.env.SITE_URL || (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NODE_ENV === "development" ? "http://localhost:3000" : "");
@@ -56,14 +56,16 @@ export async function renderOrderPdf(orderId: string) {
         new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("PDF render timeout")), 45000); }),
       ]).finally(() => clearTimeout(timer));
     };
-    const buffer = await createPdf();
-    stage = "속지 PDF 생성";
-    const interiorBuffer = await createPdf(ranges.interior);
-    stage = "책등 포함 표지 펼침 PDF 생성";
-    await page.evaluate(mountCoverSpread, { width: BOOK_TRIM.w, height: BOOK_TRIM.h, bleed: BLEED_MM, spine: COVER_SPINE_MM });
-    const coverBuffer = await createPdf();
-    return { buffer, coverBuffer, interiorBuffer, pageCount };
-
+    if (part === "interior") {
+      stage = "속지 PDF 생성";
+      return { buffer: await createPdf(ranges.interior), pageCount };
+    }
+    if (part === "cover") {
+      stage = "책등 포함 표지 펼침 PDF 생성";
+      await page.evaluate(mountCoverSpread, { width: BOOK_TRIM.w, height: BOOK_TRIM.h, bleed: BLEED_MM, spine: COVER_SPINE_MM });
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
+    }
+    return { buffer: await createPdf(), pageCount };
   } catch (error) {
     if (error instanceof AdminError) throw error;
     console.error("admin_pdf_failed", { stage, name: error instanceof Error ? error.name : "Error" });

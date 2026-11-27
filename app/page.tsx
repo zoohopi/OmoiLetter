@@ -122,10 +122,11 @@ export default function Home() {
               <p className="eyebrow">p.05</p>
               <h2 className="headline">빈 편지지 앞에서는 누구나 막힙니다.</h2>
               <p className="lead">
-                인터뷰 질문을 통해
+                가이드와 인터뷰를 통해
                 <br />
                 전하고 싶은 속마음을 이끌어 드릴게요.
               </p>
+              <p className="lead try-guide-title">편지 가이드</p>
             </Reveal>
             <Reveal delay={200}>
               <TryQuestion />

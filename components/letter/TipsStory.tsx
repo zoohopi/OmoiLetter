@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
+import "./tips.css";
 
 // 쓰는 방법 팁 1~6: 탭(또는 스와이프)으로 넘기는 카드. 스크립트는 tips-script.md.
 type Card = { text: ReactNode; scene: ReactNode };
@@ -49,9 +50,13 @@ function cards(guide: number, ex: string[]): { title: string; cards: Card[] } {
   }
 }
 
-export default function TipsStory({ guide, examples, onDone }: { guide: number; examples: string[]; onDone: () => void }) {
-  const { title, cards: list } = cards(guide, examples);
-  const [i, setI] = useState(0);
+// limit: 앞에서부터 몇 장만 보여 줄지. step/onStep: 바깥 버튼으로 넘길 때(제어 모드).
+export default function TipsStory({ guide, examples, onDone, limit, step, onStep }: { guide: number; examples: string[]; onDone: () => void; limit?: number; step?: number; onStep?: (n: number) => void }) {
+  const { title, cards: all } = cards(guide, examples);
+  const list = limit ? all.slice(0, limit) : all;
+  const [own, setOwn] = useState(0);
+  const i = step ?? own;
+  const setI = onStep ?? setOwn;
   const start = useRef<number | null>(null);
   const go = (d: number) => { const n = i + d; if (n >= list.length) onDone(); else setI(Math.max(0, n)); };
   const last = i === list.length - 1;
